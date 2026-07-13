@@ -1,0 +1,17 @@
+{
+  "short_name": "Transaksiku",
+  "name": "Transaksiku - Catatan Keuangan Pribadi",
+  "icons": [
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "orientation": "portrait"
+}
