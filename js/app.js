@@ -3554,15 +3554,14 @@ async function updateEntryUI() {
 }
 window.updateEntryUI = updateEntryUI;
 
-window.handleResetAllData = function () {
-    showCustomModal(
-        'Konfirmasi Hapus Data',
+window.handleResetAllData = async function () {
+    const confirmed = await customConfirm(
         'Apakah Anda yakin ingin menghapus seluruh data transaksi, dompet, kategori kustom, dan pengaturan Anda? Tindakan ini tidak dapat dibatalkan.',
-        function () {
-            localStorage.clear();
-            showToast('Seluruh data berhasil dihapus!');
-            setTimeout(() => window.location.reload(), 1000);
-        },
-        true
+        'Konfirmasi Hapus Data'
     );
+    if (confirmed) {
+        localStorage.clear();
+        showToast('Seluruh data berhasil dihapus!');
+        setTimeout(() => window.location.reload(), 1000);
+    }
 };

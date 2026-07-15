@@ -1,4 +1,4 @@
-const CACHE_NAME = 'transaksiku-cache-v65';
+const CACHE_NAME = 'transaksiku-cache-v70';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -38,11 +38,28 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// PERBAIKAN: Menggunakan respondWith agar halaman dikembalikan ke layar HP
+// Menggunakan strategi Stale-While-Revalidate agar pembaruan file langsung ter-fetch di background
 self.addEventListener('fetch', (event) => {
+  // Hanya jalankan caching untuk request GET dan dari HTTP/HTTPS schema
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Jika offline dan gagal fetch, tidak masalah
+      });
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
