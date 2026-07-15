@@ -13,8 +13,15 @@
     <meta name="theme-color" content="#080c14">
 
     <script>
-        // Otomatis arahkan ke app.html jika pengguna sudah login atau sedang kembali dari proses login Google (membawa token di URL)
-        if (localStorage.getItem('transaksiku_user_logged_in') === 'true' || window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
+        // Otomatis arahkan ke app.html jika pengguna sudah login, memilih mode online, atau sedang kembali dari proses login Google (membawa token/apiKey di URL)
+        if (
+            localStorage.getItem('transaksiku_user_logged_in') === 'true' || 
+            localStorage.getItem('transaksiku_entry_choice') === 'online' ||
+            window.location.hash.includes('access_token=') || 
+            window.location.search.includes('code=') ||
+            window.location.search.includes('apiKey=') ||
+            window.location.hash.includes('apiKey=')
+        ) {
             window.location.href = 'app.html' + window.location.hash + window.location.search;
         }
     </script>

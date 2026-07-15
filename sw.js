@@ -52,6 +52,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // JANGAN intercept atau cache request Firebase Auth, Google APIs, atau Firestore sync
+  const url = new URL(event.request.url);
+  if (
+    url.pathname.includes('/__/auth/') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('firebaseapp.com')
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {

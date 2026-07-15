@@ -1,14 +1,43 @@
 // MAIN ENTRY POINT - ORCHESTRATOR & EVENT BINDINGS
 
 // --- AUTHENTICATION FLOWS & HANDLERS ---
+async function performGoogleLogin(isConnectingOnly = false) {
+    if (typeof firebase === 'undefined' || !auth) {
+        showToast('Inisialisasi Firebase gagal. Berjalan dalam mode offline.');
+        return;
+    }
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Set preference early
+    localStorage.setItem('transaksiku_entry_choice', 'online');
+
+    try {
+        const result = await auth.signInWithPopup(provider);
+        if (result && result.user) {
+            showToast(isConnectingOnly ? 'Berhasil menghubungkan Google!' : 'Berhasil masuk dengan Google!');
+            localStorage.setItem('transaksiku_user_logged_in', 'true');
+            checkEntryChoice();
+            updateEntryUI();
+        }
+    } catch (popupError) {
+        console.warn("Popup blocked or failed, falling back to redirect:", popupError);
+        // Fallback to redirect
+        auth.signInWithRedirect(provider).catch((redirectError) => {
+            showToast('Gagal inisialisasi login Google: ' + redirectError.message);
+            localStorage.removeItem('transaksiku_entry_choice');
+            localStorage.removeItem('transaksiku_user_logged_in');
+            checkEntryChoice();
+            updateEntryUI();
+        });
+    }
+}
+
 async function mockGoogleLogin() {
     const btn = document.getElementById('google-login-btn');
     if (!btn) return;
     if (btn.innerText.includes('Masuk')) {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider).catch((error) => {
-            showToast('Gagal menghubungkan Google: ' + error.message);
-        });
+        await performGoogleLogin(true);
     } else {
         auth.signOut().then(() => {
             localStorage.removeItem('transaksiku_entry_choice');
@@ -36,13 +65,10 @@ function checkEntryChoice() {
 }
 
 async function handleEntryChoice(choice) {
-    localStorage.setItem('transaksiku_entry_choice', choice);
     if (choice === 'online') {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider).catch((error) => {
-            showToast('Gagal login Google: ' + error.message);
-        });
+        await performGoogleLogin(false);
     } else {
+        localStorage.setItem('transaksiku_entry_choice', choice);
         showToast('Masuk sebagai Tamu (Offline).');
         checkEntryChoice();
         updateEntryUI();
@@ -234,17 +260,30 @@ registerDataChangedCallback(() => {
     applyFilter();
 });
 
+let isInitialAuthCheck = true;
+
 // Setup Firebase Authentication listener
 auth.onAuthStateChanged(async (user) => {
+    const wasInitial = isInitialAuthCheck;
+    isInitialAuthCheck = false;
+
     if (user) {
         localStorage.setItem('transaksiku_entry_choice', 'online');
         localStorage.setItem('transaksiku_user_logged_in', 'true');
+        checkEntryChoice();
         updateEntryUI();
         await pullCloudData(user.uid);
         subscribeToCloudChanges(user.uid);
     } else {
+        // Jika pengguna berniat masuk online pada muatan awal, jangan hapus pilihan masuk
+        // agar proses getRedirectResult dapat menyelesaikannya terlebih dahulu.
+        if (wasInitial && localStorage.getItem('transaksiku_entry_choice') === 'online') {
+            return;
+        }
+
         localStorage.removeItem('transaksiku_entry_choice');
         localStorage.removeItem('transaksiku_user_logged_in');
+        checkEntryChoice();
         updateEntryUI();
         const unsub = unsubscribeRealtime;
         if (unsub) {
@@ -253,6 +292,40 @@ auth.onAuthStateChanged(async (user) => {
         }
     }
 });
+
+// Memproses hasil redirect dari Google Sign-In secara eksplisit (jika ada)
+if (auth && typeof auth.getRedirectResult === 'function') {
+    auth.getRedirectResult()
+        .then((result) => {
+            if (result && result.user) {
+                console.log("Redirect login sukses:", result.user);
+                showToast("Berhasil masuk dengan Google!");
+                localStorage.setItem('transaksiku_entry_choice', 'online');
+                localStorage.setItem('transaksiku_user_logged_in', 'true');
+                checkEntryChoice();
+                updateEntryUI();
+            } else {
+                // Jika tidak ada hasil redirect (halaman dibuka biasa) tetapi user tidak login dan mode online aktif,
+                // maka hapus preferences dan tampilkan welcome screen
+                setTimeout(() => {
+                    if (!auth.currentUser && localStorage.getItem('transaksiku_entry_choice') === 'online') {
+                        localStorage.removeItem('transaksiku_entry_choice');
+                        localStorage.removeItem('transaksiku_user_logged_in');
+                        checkEntryChoice();
+                        updateEntryUI();
+                    }
+                }, 1200); // Beri jeda 1.2 detik agar onAuthStateChanged selesai memeriksa
+            }
+        })
+        .catch((error) => {
+            console.error("Redirect login error:", error);
+            showToast("Gagal masuk dengan Google: " + error.message);
+            localStorage.removeItem('transaksiku_entry_choice');
+            localStorage.removeItem('transaksiku_user_logged_in');
+            checkEntryChoice();
+            updateEntryUI();
+        });
+}
 
 // Run theme and other startup configurations
 console.log("DEBUG STARTUP: checkEntryChoice start");
