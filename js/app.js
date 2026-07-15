@@ -101,12 +101,44 @@ async function updateEntryUI() {
 }
 
 async function handleResetAllData() {
-    const confirmed = await customConfirm(
-        'Apakah Anda yakin ingin menghapus seluruh data transaksi, dompet, kategori kustom, dan pengaturan Anda? Tindakan ini tidak dapat dibatalkan.',
-        'Konfirmasi Hapus Data'
-    );
+    const isOnline = auth && auth.currentUser && localStorage.getItem('transaksiku_entry_choice') === 'online';
+    const message = isOnline 
+        ? 'Apakah Anda yakin ingin menghapus seluruh data transaksi, dompet, dan kategori kustom Anda? Akun Google Anda akan tetap terhubung dan data di cloud akan dikosongkan.'
+        : 'Apakah Anda yakin ingin menghapus seluruh data transaksi, dompet, kategori kustom, dan pengaturan Anda? Tindakan ini tidak dapat dibatalkan.';
+        
+    const confirmed = await customConfirm(message, 'Konfirmasi Hapus Data');
     if (confirmed) {
-        localStorage.clear();
+        showToast('Menghapus data...');
+        try {
+            if (isOnline) {
+                const uid = auth.currentUser.uid;
+                if (db && typeof db.collection === 'function') {
+                    // Kosongkan data di cloud (Firestore)
+                    await db.collection('user_sync').doc(uid).set({
+                        user_id: uid,
+                        wallets: [],
+                        transactions: [],
+                        custom_categories: [],
+                        updated_at: new Date().toISOString()
+                    }).catch(err => {
+                        console.error("Gagal mengosongkan data cloud:", err);
+                    });
+                }
+                
+                // Hapus data transaksi, dompet, dan kategori secara lokal, tapi pertahankan login
+                localStorage.removeItem('keuangan_wallets28');
+                localStorage.removeItem('keuangan_transactions28');
+                localStorage.removeItem('transaksiku_custom_categories');
+                localStorage.removeItem('transaksiku_hide_balances');
+            } else {
+                // Untuk user offline, hapus semua
+                localStorage.clear();
+            }
+        } catch (e) {
+            console.error("Kesalahan saat menghapus data:", e);
+            localStorage.clear();
+        }
+
         showToast('Seluruh data berhasil dihapus!');
         setTimeout(() => window.location.reload(), 1000);
     }
