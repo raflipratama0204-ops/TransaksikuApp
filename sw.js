@@ -1,12 +1,15 @@
-const CACHE_NAME = 'transaksiku-cache-v63';
+const CACHE_NAME = 'transaksiku-cache-v65';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './app.html',
   './css/style.css',
+  './css/landing.css',
   './js/app.js',
   './manifest.json',
   './logo.png',
-  'https://cdn.jsdelivr.net/npm/chart.js'
+  'https://cdn.jsdelivr.net/npm/chart.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 
 // Tahap instalasi & penyimpanan
