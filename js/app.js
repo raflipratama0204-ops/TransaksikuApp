@@ -9,6 +9,92 @@
             });
         }
 
+        // SUPABASE CLIENT INITIALIZATION
+        const SUPABASE_URL = 'https://tbtckopbzoojhxcmzsat.supabase.co';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Silakan isi dengan Anon Key Supabase Anda
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Menangani Auth State (Login / Logout) secara otomatis
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                localStorage.setItem('transaksiku_entry_choice', 'online');
+                localStorage.setItem('transaksiku_user_logged_in', 'true');
+                updateEntryUI();
+                await pullCloudData(session.user.id);
+            } else if (event === 'SIGNED_OUT') {
+                localStorage.removeItem('transaksiku_entry_choice');
+                localStorage.removeItem('transaksiku_user_logged_in');
+                updateEntryUI();
+            }
+        });
+
+        // Mengambil data dari cloud ke local storage
+        async function pullCloudData(userId) {
+            showToast('Memuat data dari cloud...');
+            const { data, error } = await supabaseClient
+                .from('user_sync')
+                .select('wallets, transactions, custom_categories')
+                .eq('user_id', userId)
+                .single();
+                
+            if (error && error.code !== 'PGRST116') {
+                console.error('Gagal mengambil data cloud:', error.message);
+                return;
+            }
+            
+            if (data) {
+                localStorage.setItem('keuangan_wallets28', JSON.stringify(data.wallets || []));
+                localStorage.setItem('keuangan_transactions28', JSON.stringify(data.transactions || []));
+                localStorage.setItem('transaksiku_custom_categories', JSON.stringify(data.custom_categories || []));
+                
+                wallets = data.wallets || [];
+                transactions = data.transactions || [];
+                
+                generateDynamicFilters();
+                renderWallets();
+                renderSettingsCustomCategories();
+                applyFilter();
+                showToast('Sinkronisasi selesai. Data cloud termuat!');
+            } else {
+                showToast('Membuat backup cloud pertama kali...');
+                await syncLocalToCloud(userId);
+            }
+        }
+
+        // Mencadangkan data lokal ke cloud
+        async function syncLocalToCloud(userId) {
+            if (!userId) {
+                const session = await supabaseClient.auth.getSession();
+                if (!session.data.session) return;
+                userId = session.data.session.user.id;
+            }
+            
+            const walletsData = JSON.parse(localStorage.getItem('keuangan_wallets28') || '[]');
+            const transactionsData = JSON.parse(localStorage.getItem('keuangan_transactions28') || '[]');
+            const categoriesData = JSON.parse(localStorage.getItem('transaksiku_custom_categories') || '[]');
+            
+            const { error } = await supabaseClient
+                .from('user_sync')
+                .upsert({
+                    user_id: userId,
+                    wallets: walletsData,
+                    transactions: transactionsData,
+                    custom_categories: categoriesData,
+                    updated_at: new Date().toISOString()
+                });
+                
+            if (error) {
+                console.error('Gagal mencadangkan data:', error.message);
+            }
+        }
+
+        // Trigger sinkronisasi jika user sedang login
+        function triggerCloudSync() {
+            if (localStorage.getItem('transaksiku_user_logged_in') === 'true') {
+                syncLocalToCloud().catch(err => console.error('Cloud sync failed:', err));
+            }
+        }
+
         let wallets = JSON.parse(localStorage.getItem('keuangan_wallets28')) || [
             { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
             { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
@@ -2593,6 +2679,7 @@
             localStorage.setItem('keuangan_transactions28', JSON.stringify(transactions));
             generateDynamicFilters();
             renderWallets(); applyFilter();
+            triggerCloudSync();
         }
 
         function toggleTheme() {
@@ -3223,6 +3310,7 @@
             closeCustomCategoryModal();
             updateCategoryOptions();
             showToast('Kategori kustom berhasil disimpan!');
+            triggerCloudSync();
         };
 
         // NEW SETTINGS-BASED CATEGORY MANAGER
@@ -3243,6 +3331,7 @@
             renderSettingsCustomCategories();
             updateCategoryOptions();
             showToast('Kategori kustom berhasil ditambahkan!');
+            triggerCloudSync();
         };
 
         window.renderSettingsCustomCategories = function() {
@@ -3287,6 +3376,7 @@
             renderSettingsCustomCategories();
             updateCategoryOptions();
             showToast('Kategori kustom dihapus.');
+            triggerCloudSync();
         };
 
         // SETTINGS TAB FUNCTION
@@ -3376,27 +3466,30 @@
             }
         };
 
-        // GOOGLE LOGIN SIMULATION & AUTH FLOW
-        window.mockGoogleLogin = function() {
+        // GOOGLE LOGIN REAL AUTH FLOW (Supabase)
+        window.mockGoogleLogin = async function() {
             const btn = document.getElementById('google-login-btn');
-            const statusTitle = document.getElementById('sync-status-title');
-            const statusDesc = document.getElementById('sync-status-desc');
-            if (!btn || !statusTitle || !statusDesc) return;
+            if (!btn) return;
             if (btn.innerText.includes('Masuk')) {
-                localStorage.setItem('transaksiku_entry_choice', 'online');
-                localStorage.setItem('transaksiku_user_logged_in', 'true');
-                btn.innerHTML = '<span>Keluar Akun Google</span>';
-                btn.style.background = 'var(--danger)';
-                btn.style.color = 'white';
-                statusTitle.innerText = 'Akun Terhubung: budi@gmail.com';
-                statusDesc.innerText = 'Sinkronisasi Supabase aktif (Simulasi)';
-                showToast('Menyinkronkan data lokal ke cloud...');
-                setTimeout(() => showToast('Login Berhasil! Data lokal dipindahkan ke database online (Simulasi).'), 1200);
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname
+                    }
+                });
+                if (error) {
+                    showToast('Gagal menghubungkan Google: ' + error.message);
+                }
             } else {
-                localStorage.removeItem('transaksiku_entry_choice');
-                localStorage.removeItem('transaksiku_user_logged_in');
-                showToast('Akun Google diputus.');
-                setTimeout(() => window.location.reload(), 800);
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    showToast('Gagal memutus akun: ' + error.message);
+                } else {
+                    localStorage.removeItem('transaksiku_entry_choice');
+                    localStorage.removeItem('transaksiku_user_logged_in');
+                    showToast('Akun Google diputus.');
+                    setTimeout(() => window.location.reload(), 800);
+                }
             }
         };
 
@@ -3416,19 +3509,26 @@
         }
         window.checkEntryChoice = checkEntryChoice;
 
-        window.handleEntryChoice = function(choice) {
+        window.handleEntryChoice = async function(choice) {
             localStorage.setItem('transaksiku_entry_choice', choice);
             if (choice === 'online') {
-                localStorage.setItem('transaksiku_user_logged_in', 'true');
-                showToast('Login Google Berhasil! Sinkronisasi Supabase Aktif.');
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname
+                    }
+                });
+                if (error) {
+                    showToast('Gagal login Google: ' + error.message);
+                }
             } else {
                 showToast('Masuk sebagai Tamu (Offline).');
+                checkEntryChoice();
+                updateEntryUI();
             }
-            checkEntryChoice();
-            updateEntryUI();
         };
 
-        function updateEntryUI() {
+        async function updateEntryUI() {
             const choice = localStorage.getItem('transaksiku_entry_choice');
             const btn = document.getElementById('google-login-btn');
             const statusTitle = document.getElementById('sync-status-title');
@@ -3439,8 +3539,11 @@
                 btn.innerHTML = '<span>Keluar Akun Google</span>';
                 btn.style.background = 'var(--danger)';
                 btn.style.color = 'white';
-                statusTitle.innerText = 'Akun Terhubung: budi@gmail.com';
-                statusDesc.innerText = 'Sinkronisasi Supabase aktif (Simulasi)';
+                
+                const session = await supabaseClient.auth.getSession();
+                const email = session.data.session?.user?.email || 'Akun Terhubung';
+                statusTitle.innerText = 'Akun Terhubung: ' + email;
+                statusDesc.innerText = 'Sinkronisasi cloud aktif';
             } else {
                 btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.54 14.98 1 12 1 7.35 1 3.37 3.65 1.4 7.56l3.87 3C6.18 7.73 8.87 5.04 12 5.04z"/><path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.4 3.58l3.76 2.91c2.2-2.03 3.67-5.02 3.67-8.64z"/><path fill="#FBBC05" d="M5.27 14.56c-.25-.73-.39-1.5-.39-2.31s.14-1.58.39-2.31L1.4 6.94C.51 8.71 0 10.74 0 12.9s.51 4.19 1.4 5.96l3.87-3.3z"/><path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.76-2.91c-1.1.74-2.5 1.18-4.2 1.18-3.13 0-5.82-2.69-6.77-5.52l-3.87 3C3.37 20.35 7.35 23 12 23z"/></svg><span>Masuk dengan Google</span>';
                 btn.style.background = 'white';
