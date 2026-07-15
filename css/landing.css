@@ -588,14 +588,14 @@ footer {
 /* RESPONSIVE DESIGN (Media Queries) */
 @media (max-width: 968px) {
     header {
-        padding: 20px 5%;
+        padding: 16px 5%;
     }
     
     .hero {
         flex-direction: column;
         text-align: center;
         padding: 120px 5% 60px;
-        gap: 50px;
+        gap: 40px;
     }
     
     .hero-badge {
@@ -604,6 +604,7 @@ footer {
     
     .hero-desc {
         margin: 0 auto;
+        font-size: 1.05rem;
     }
     
     .hero-buttons {
@@ -615,32 +616,122 @@ footer {
     }
     
     .phone-mockup {
-        width: 290px;
-        height: 570px;
+        width: 280px;
+        height: 550px;
     }
     
     .section-title {
         font-size: 2rem;
     }
+
+    .features-section {
+        padding: 60px 5%;
+    }
+
+    .cta-section {
+        padding: 40px 5% 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 15px;
+    }
+
+    header {
+        padding: 12px 4%;
+    }
+
+    .brand-name {
+        font-size: 1.25rem;
+    }
+
+    .brand-logo {
+        width: 32px;
+        height: 32px;
+    }
+
+    header .btn-primary {
+        padding: 8px 18px;
+        font-size: 0.85rem;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+        letter-spacing: -1px;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .feature-card {
+        padding: 25px 20px;
+    }
+
+    .cta-banner {
+        padding: 40px 24px;
+        border-radius: 20px;
+    }
 }
 
 @media (max-width: 480px) {
+    html {
+        font-size: 14px;
+    }
+
+    header {
+        padding: 10px 16px;
+    }
+
+    .brand-name {
+        font-size: 1.15rem;
+    }
+
+    .brand-logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    header .btn-primary {
+        padding: 6px 14px;
+        font-size: 0.8rem;
+    }
+
     .hero-title {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
     }
     
     .hero-buttons {
         flex-direction: column;
         width: 100%;
-        gap: 12px;
+        gap: 10px;
     }
     
     .hero-buttons a {
         width: 100%;
         justify-content: center;
+        padding: 10px 20px;
+    }
+
+    .phone-mockup {
+        width: 250px;
+        height: 490px;
+        border-width: 8px;
+        border-radius: 28px;
     }
     
     .cta-banner h2 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
+    }
+
+    .cta-banner p {
+        font-size: 0.95rem;
+    }
+
+    .cta-banner .btn-primary {
+        width: 100%;
+        justify-content: center;
     }
 }

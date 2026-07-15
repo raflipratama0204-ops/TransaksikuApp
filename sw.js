@@ -1,4 +1,4 @@
-const CACHE_NAME = 'transaksiku-cache-v70';
+const CACHE_NAME = 'transaksiku-cache-v76';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -6,10 +6,17 @@ const ASSETS_TO_CACHE = [
   './css/style.css',
   './css/landing.css',
   './js/app.js',
+  './js/config.js',
+  './js/utils.js',
+  './js/db.js',
+  './js/charts.js',
+  './js/ui.js',
   './manifest.json',
   './logo.png',
   'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'
 ];
 
 // Tahap instalasi & penyimpanan

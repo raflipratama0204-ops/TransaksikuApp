@@ -19,6 +19,30 @@
         }
     </script>
 
+    <script>
+        // Force cleanup of old Service Worker caches once to resolve page freeze issues
+        if (localStorage.getItem('transaksiku_cache_cleaned_v76') !== 'true') {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+            }
+            if ('caches' in window) {
+                caches.keys().then(function (names) {
+                    for (let name of names) {
+                        caches.delete(name);
+                    }
+                });
+            }
+            localStorage.setItem('transaksiku_cache_cleaned_v76', 'true');
+            setTimeout(function () {
+                window.location.reload();
+            }, 300);
+        }
+    </script>
+
     <!-- Stylesheet -->
     <link rel="stylesheet" href="css/landing.css">
 </head>

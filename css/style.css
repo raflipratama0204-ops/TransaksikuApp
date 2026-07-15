@@ -239,13 +239,6 @@
             background: #fff;
         }
 
-        .wallet-item.invest-type {
-            border-left: 4px solid var(--success);
-        }
-
-        .wallet-item.cash-type {
-            border-left: 4px solid var(--accent);
-        }
 
         .w-info h4 {
             font-size: 1rem;
