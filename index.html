@@ -12,6 +12,13 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#080c14">
 
+    <script>
+        // Otomatis arahkan ke app.html jika pengguna sudah login atau sedang kembali dari proses login Google (membawa token di URL)
+        if (localStorage.getItem('transaksiku_user_logged_in') === 'true' || window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
+            window.location.href = 'app.html' + window.location.hash + window.location.search;
+        }
+    </script>
+
     <!-- Stylesheet -->
     <link rel="stylesheet" href="css/landing.css">
 </head>
