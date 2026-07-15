@@ -1609,20 +1609,20 @@ function renderComparisonChart(currIncome, currExpense) {
     window.myComparisonChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Pemasukan', 'Pengeluaran'],
+            labels: [prevLabel, currLabel],
             datasets: [
                 {
-                    label: prevLabel,
-                    data: [prevData.income, prevData.expense],
-                    backgroundColor: '#94a3b8',
+                    label: 'Pemasukan',
+                    data: [prevData.income, currIncome],
+                    backgroundColor: '#10b981',
                     borderRadius: 6,
                     borderWidth: 0,
                     stack: 'Stack 0'
                 },
                 {
-                    label: currLabel,
-                    data: [currIncome, currExpense],
-                    backgroundColor: ['#10b981', '#ef4444'],
+                    label: 'Pengeluaran',
+                    data: [prevData.expense, currExpense],
+                    backgroundColor: '#ef4444',
                     borderRadius: 6,
                     borderWidth: 0,
                     stack: 'Stack 0'
@@ -1897,7 +1897,7 @@ function renderDebtChartAndBreakdown() {
     const monthlyCard = document.getElementById('debt-monthly-status-card');
     const monthlyStatusContainer = document.getElementById('debt-monthly-status-list');
     if (monthlyCard && monthlyStatusContainer) {
-        if (bankOut === 0 && ccOut === 0 && persOut === 0) {
+        if (bankOut === 0 && ccOut === 0 && persOut === 0 && !paidBankThisMonth && !paidCcThisMonth && !paidPersThisMonth) {
             monthlyCard.style.display = 'none';
         } else {
             monthlyCard.style.display = 'block';
@@ -1911,7 +1911,7 @@ function renderDebtChartAndBreakdown() {
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                     `;
 
-            if (bankOut > 0) {
+            if (bankOut > 0 || paidBankThisMonth) {
                 html += `
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 10px; background: var(--bg); border: 1px solid ${paidBankThisMonth ? 'var(--success)' : 'rgba(226, 232, 240, 0.5)'};">
                                 <span style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
@@ -1924,7 +1924,7 @@ function renderDebtChartAndBreakdown() {
                         `;
             }
 
-            if (ccOut > 0) {
+            if (ccOut > 0 || paidCcThisMonth) {
                 html += `
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 10px; background: var(--bg); border: 1px solid ${paidCcThisMonth ? 'var(--success)' : 'rgba(226, 232, 240, 0.5)'};">
                                 <span style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
@@ -1937,7 +1937,7 @@ function renderDebtChartAndBreakdown() {
                         `;
             }
 
-            if (persOut > 0) {
+            if (persOut > 0 || paidPersThisMonth) {
                 html += `
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 10px; background: var(--bg); border: 1px solid ${paidPersThisMonth ? 'var(--success)' : 'rgba(226, 232, 240, 0.5)'};">
                                 <span style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
@@ -1985,12 +1985,12 @@ function renderDebtChartAndBreakdown() {
 
                 historyHtml += `
                             <div class="flow-item" style="border-bottom: 1px solid rgba(226, 232, 240, 0.1); padding-bottom: 10px; margin-bottom: 8px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="display: flex; flex-direction: column;">
-                                        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">${categoryIconAndName}</span>
-                                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">📅 Tanggal: ${p.date}</span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                                    <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
+                                        <span style="font-weight: 600; font-size: 0.78rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${categoryIconAndName}">${categoryIconAndName}</span>
+                                        <span style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">📅 Tanggal: ${p.date}</span>
                                     </div>
-                                    <span style="color: var(--success); font-weight: 700; font-size: 0.95rem;">${formatRp(p.amount)}</span>
+                                    <span style="color: var(--success); font-weight: 700; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0;">${formatRp(p.amount)}</span>
                                 </div>
                             </div>
                         `;
@@ -2194,7 +2194,7 @@ function renderReceivablesChartAndBreakdown() {
     const monthlyCard = document.getElementById('receivables-monthly-status-card');
     const monthlyStatusContainer = document.getElementById('receivables-monthly-status-list');
     if (monthlyCard && monthlyStatusContainer) {
-        if (persOut === 0 && bizOut === 0) {
+        if (persOut === 0 && bizOut === 0 && !paidPersThisMonth && !paidBizThisMonth) {
             monthlyCard.style.display = 'none';
         } else {
             monthlyCard.style.display = 'block';
@@ -2208,7 +2208,7 @@ function renderReceivablesChartAndBreakdown() {
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                     `;
 
-            if (persOut > 0) {
+            if (persOut > 0 || paidPersThisMonth) {
                 html += `
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 10px; background: var(--bg); border: 1px solid ${paidPersThisMonth ? 'var(--success)' : 'rgba(226, 232, 240, 0.5)'};">
                                 <span style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
@@ -2221,7 +2221,7 @@ function renderReceivablesChartAndBreakdown() {
                         `;
             }
 
-            if (bizOut > 0) {
+            if (bizOut > 0 || paidBizThisMonth) {
                 html += `
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 10px; background: var(--bg); border: 1px solid ${paidBizThisMonth ? 'var(--success)' : 'rgba(226, 232, 240, 0.5)'};">
                                 <span style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
