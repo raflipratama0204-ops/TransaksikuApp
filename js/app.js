@@ -2267,12 +2267,12 @@ function renderReceivablesChartAndBreakdown() {
 
                 historyHtml += `
                             <div class="flow-item" style="border-bottom: 1px solid rgba(226, 232, 240, 0.1); padding-bottom: 10px; margin-bottom: 8px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="display: flex; flex-direction: column;">
-                                        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">${categoryIconAndName}</span>
-                                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">📅 Tanggal: ${p.date}</span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                                    <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
+                                        <span style="font-weight: 600; font-size: 0.78rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${categoryIconAndName}">${categoryIconAndName}</span>
+                                        <span style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">📅 Tanggal: ${p.date}</span>
                                     </div>
-                                    <span style="color: var(--success); font-weight: 700; font-size: 0.95rem;">${formatRp(p.amount)}</span>
+                                    <span style="color: var(--success); font-weight: 700; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0;">${formatRp(p.amount)}</span>
                                 </div>
                             </div>
                         `;
