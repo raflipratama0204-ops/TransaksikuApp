@@ -129,7 +129,7 @@ function subscribeToCloudChanges(userId) {
                 state.customCategories = newCategories;
 
                 notifyDataChanged();
-                showToast('Data diperbarui dari perangkat lain secara realtime!');
+                // showToast('Data diperbarui dari perangkat lain secara realtime!');
             }
         }
     }, (error) => {

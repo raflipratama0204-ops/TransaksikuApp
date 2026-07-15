@@ -193,10 +193,14 @@
 
         .form-panel {
             flex: 1.5;
+            position: relative;
+            z-index: 1;
         }
 
         .wallet-panel {
             flex: 1;
+            position: relative;
+            z-index: 2;
         }
 
         /* Cards Generic */
