@@ -739,17 +739,21 @@
 
         /* UNIFIED PREMIUM MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
+            html {
+                font-size: 14px !important;
+            }
+
             body {
-                padding: 8px;
+                padding: 6px;
             }
 
             .container {
-                margin-top: 5px;
+                margin-top: 4px;
             }
 
             .main-grid {
                 flex-direction: column;
-                gap: 15px;
+                gap: 12px;
             }
 
             .form-panel {
@@ -763,65 +767,65 @@
 
             /* Splash Screen */
             .splash-loader {
-                width: 50px;
-                height: 50px;
+                width: 45px;
+                height: 45px;
             }
 
             /* Top Bar Navigation Header */
             .top-bar {
-                padding: 10px 12px;
-                border-radius: 12px;
-                margin-bottom: 15px;
+                padding: 8px 10px;
+                border-radius: 10px;
+                margin-bottom: 12px;
             }
 
             .brand-name {
-                font-size: 1.05rem;
+                font-size: 1rem;
             }
 
             .brand-logo {
-                width: 28px;
-                height: 28px;
+                width: 24px;
+                height: 24px;
             }
 
             .menu-btn,
             .theme-toggle-btn {
-                width: 34px;
-                height: 34px;
-                padding: 8px;
+                width: 30px;
+                height: 30px;
+                padding: 6px;
             }
 
             /* Headers */
             .header-title h1 {
-                font-size: 1.35rem;
+                font-size: 1.25rem;
                 letter-spacing: -0.3px;
             }
 
             .header-title p {
-                font-size: 0.8rem;
+                font-size: 0.75rem;
             }
 
             .header-title {
-                margin-bottom: 15px;
+                margin-bottom: 12px;
             }
 
             /* Summaries Grid & Cards */
             .summary-grid {
                 grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                margin-bottom: 15px;
+                gap: 6px;
+                margin-bottom: 12px;
             }
 
             .summary-card {
-                padding: 12px 14px;
-                border-radius: 12px;
+                padding: 10px 12px;
+                border-radius: 10px;
             }
 
             .summary-card h2 {
-                font-size: 1.15rem;
+                font-size: 1.05rem;
             }
 
             .summary-card p {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
                 margin-bottom: 2px;
             }
 
@@ -831,80 +835,80 @@
 
             /* Cards Generic */
             .card {
-                padding: 14px;
-                border-radius: 12px;
-                margin-bottom: 15px;
+                padding: 12px;
+                border-radius: 10px;
+                margin-bottom: 12px;
             }
 
             .card h3 {
-                margin-bottom: 12px;
-                font-size: 1.05rem;
-                padding-bottom: 8px;
+                margin-bottom: 10px;
+                font-size: 0.98rem;
+                padding-bottom: 6px;
             }
 
             /* Wallets List spacing */
             .wallet-item {
-                padding: 10px 12px;
-                margin-bottom: 8px;
-                border-radius: 8px;
+                padding: 8px 10px;
+                margin-bottom: 6px;
+                border-radius: 6px;
             }
 
             .w-info h4 {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
 
             .w-info p {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
             }
 
             .w-balance-val {
-                font-size: 0.95rem;
+                font-size: 0.9rem;
             }
 
             .btn-option {
-                padding: 3px 6px;
-                font-size: 0.75rem;
+                padding: 2px 5px;
+                font-size: 0.7rem;
             }
 
             /* Forms & Inputs */
             .form-group {
-                margin-bottom: 12px;
+                margin-bottom: 10px;
             }
 
             label {
-                font-size: 0.8rem;
-                margin-bottom: 4px;
+                font-size: 0.75rem;
+                margin-bottom: 3px;
             }
 
             input,
             select {
-                padding: 10px;
-                font-size: 0.85rem;
+                padding: 8px 10px;
+                font-size: 0.8rem;
                 border-radius: 6px;
             }
 
             .btn {
-                padding: 10px;
-                font-size: 0.9rem;
+                padding: 8px 10px;
+                font-size: 0.85rem;
                 border-radius: 6px;
             }
 
             /* Tabs & Filters */
             .tabs-header {
-                gap: 10px;
-                padding-bottom: 10px;
-                margin-bottom: 12px;
+                gap: 8px;
+                padding-bottom: 8px;
+                margin-bottom: 10px;
             }
 
             .tab-btn {
-                padding: 8px 14px;
-                font-size: 0.85rem;
+                padding: 6px 12px;
+                font-size: 0.8rem;
                 border-radius: 6px;
             }
 
             .filter-container select {
-                padding: 6px 10px;
-                font-size: 0.8rem;
+                padding: 5px 8px;
+                font-size: 0.75rem;
             }
 
             /* Riwayat Transaksi (Compact Mobile Cards) */
