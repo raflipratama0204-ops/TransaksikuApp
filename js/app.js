@@ -39,10 +39,19 @@ async function mockGoogleLogin() {
     if (btn.innerText.includes('Masuk')) {
         await performGoogleLogin(true);
     } else {
+        // Hapus data lokal agar tidak nyangkut saat logout
+        localStorage.removeItem('keuangan_wallets28');
+        localStorage.removeItem('keuangan_transactions28');
+        localStorage.removeItem('transaksiku_custom_categories');
+        localStorage.removeItem('transaksiku_hide_balances');
+        localStorage.removeItem('transaksiku_deleted_tx_ids');
+        localStorage.removeItem('transaksiku_deleted_wallet_ids');
+        localStorage.removeItem('transaksiku_deleted_categories');
+
         auth.signOut().then(() => {
             localStorage.removeItem('transaksiku_entry_choice');
             localStorage.removeItem('transaksiku_user_logged_in');
-            showToast('Akun Google diputus.');
+            showToast('Berhasil keluar akun.');
             setTimeout(() => window.location.reload(), 800);
         }).catch((error) => {
             showToast('Gagal memutus akun: ' + error.message);
@@ -103,7 +112,7 @@ async function updateEntryUI() {
 async function handleResetAllData() {
     const isOnline = auth && auth.currentUser && localStorage.getItem('transaksiku_entry_choice') === 'online';
     const message = isOnline 
-        ? 'Apakah Anda yakin ingin menghapus seluruh data transaksi, dompet, dan kategori kustom Anda? Akun Google Anda akan tetap terhubung dan data di cloud akan dikosongkan.'
+        ? 'Apakah Anda yakin ingin menghapus seluruh data transaksi, dompet, dan kategori kustom Anda? Akun Anda akan tetap terhubung dan data di cloud akan dikosongkan.'
         : 'Apakah Anda yakin ingin menghapus seluruh data transaksi, dompet, kategori kustom, dan pengaturan Anda? Tindakan ini tidak dapat dibatalkan.';
         
     const confirmed = await customConfirm(message, 'Konfirmasi Hapus Data');
@@ -111,9 +120,35 @@ async function handleResetAllData() {
         showToast('Menghapus data...');
         try {
             if (isOnline) {
+                // 1. Matikan pendengar real-time untuk mencegah sinkronisasi balik (race condition)
+                if (typeof unsubscribeRealtime === 'function') {
+                    unsubscribeRealtime();
+                }
+                if (typeof setUnsubscribeRealtime === 'function') {
+                    setUnsubscribeRealtime(null);
+                }
+
+                // 2. Kosongkan data secara lokal terlebih dahulu
+                localStorage.removeItem('keuangan_wallets28');
+                localStorage.removeItem('keuangan_transactions28');
+                localStorage.removeItem('transaksiku_custom_categories');
+                localStorage.removeItem('transaksiku_hide_balances');
+                localStorage.removeItem('transaksiku_deleted_tx_ids');
+                localStorage.removeItem('transaksiku_deleted_wallet_ids');
+                localStorage.removeItem('transaksiku_deleted_categories');
+                
+                // Reset state in-memory
+                state.wallets = [
+                    { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
+                    { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
+                    { id: 3, name: 'Portofolio Saham', balance: 0, type: 'invest' }
+                ];
+                state.transactions = [];
+                state.customCategories = [];
+
+                // 3. Kosongkan data di cloud (Firestore)
                 const uid = auth.currentUser.uid;
                 if (db && typeof db.collection === 'function') {
-                    // Kosongkan data di cloud (Firestore)
                     await db.collection('user_sync').doc(uid).set({
                         user_id: uid,
                         wallets: [],
@@ -124,12 +159,6 @@ async function handleResetAllData() {
                         console.error("Gagal mengosongkan data cloud:", err);
                     });
                 }
-                
-                // Hapus data transaksi, dompet, dan kategori secara lokal, tapi pertahankan login
-                localStorage.removeItem('keuangan_wallets28');
-                localStorage.removeItem('keuangan_transactions28');
-                localStorage.removeItem('transaksiku_custom_categories');
-                localStorage.removeItem('transaksiku_hide_balances');
             } else {
                 // Untuk user offline, hapus semua
                 localStorage.clear();
@@ -290,6 +319,9 @@ registerDataChangedCallback(() => {
     generateDynamicFilters();
     renderWallets();
     applyFilter();
+    if (typeof renderSettingsCustomCategories === 'function') {
+        renderSettingsCustomCategories();
+    }
 });
 
 let isInitialAuthCheck = true;
@@ -311,6 +343,17 @@ auth.onAuthStateChanged(async (user) => {
         // agar proses getRedirectResult dapat menyelesaikannya terlebih dahulu.
         if (wasInitial && localStorage.getItem('transaksiku_entry_choice') === 'online') {
             return;
+        }
+
+        // Hapus data lokal jika sebelumnya online untuk mencegah kebocoran data saat logout/sesi habis
+        if (localStorage.getItem('transaksiku_entry_choice') === 'online') {
+            localStorage.removeItem('keuangan_wallets28');
+            localStorage.removeItem('keuangan_transactions28');
+            localStorage.removeItem('transaksiku_custom_categories');
+            localStorage.removeItem('transaksiku_hide_balances');
+            localStorage.removeItem('transaksiku_deleted_tx_ids');
+            localStorage.removeItem('transaksiku_deleted_wallet_ids');
+            localStorage.removeItem('transaksiku_deleted_categories');
         }
 
         localStorage.removeItem('transaksiku_entry_choice');
@@ -382,7 +425,26 @@ console.log("DEBUG STARTUP: applyFilter start");
 applyFilter();
 console.log("DEBUG STARTUP: applyDisplaySettings start");
 applyDisplaySettings();
+handleQueryParameters();
 console.log("DEBUG STARTUP: all routines completed successfully!");
+
+function handleQueryParameters() {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab) {
+        if (typeof navigateTo === 'function') {
+            navigateTo(tab);
+        }
+    }
+    const action = params.get('action');
+    if (action === 'new-transaction') {
+        const transAmountInput = document.getElementById('trans-amount');
+        if (transAmountInput) {
+            transAmountInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => transAmountInput.focus(), 800);
+        }
+    }
+}
 
 // PWA Installer checks
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');

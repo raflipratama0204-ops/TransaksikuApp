@@ -13,5 +13,28 @@
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#0f172a",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "Catat Transaksi Baru",
+      "short_name": "Catat",
+      "description": "Catat pengeluaran atau pemasukan keuangan baru",
+      "url": "app.html?action=new-transaction",
+      "icons": [{ "src": "logo.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Lihat Laporan",
+      "short_name": "Laporan",
+      "description": "Buka grafik dan laporan arus kas keuangan",
+      "url": "app.html?tab=cashflow",
+      "icons": [{ "src": "logo.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Catatan Hutang",
+      "short_name": "Hutang",
+      "description": "Buka catatan hutang Anda",
+      "url": "app.html?tab=debt",
+      "icons": [{ "src": "logo.png", "sizes": "512x512" }]
+    }
+  ]
 }

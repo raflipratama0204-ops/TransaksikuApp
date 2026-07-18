@@ -1973,7 +1973,7 @@ function renderSettingsCustomCategories() {
         receivables: 'Piutang 🔵'
     };
 
-    state.customCategories.forEach((c, idx) => {
+    state.customCategories.forEach((c) => {
         html += `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 5px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -1983,26 +1983,27 @@ function renderSettingsCustomCategories() {
                         <span style="font-size: 0.7rem; color: var(--text-muted);">${typeLabels[c.type] || c.type}</span>
                     </div>
                 </div>
-                <button onclick="deleteCustomCategoryFromSettings(${idx})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: 600; font-size: 0.8rem; padding: 4px 8px;">Hapus</button>
+                <button onclick="deleteCustomCategoryFromSettings('${c.name.replace(/'/g, "\\'")}', '${c.type}')" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: 600; font-size: 0.8rem; padding: 4px 8px;">Hapus</button>
             </div>
         `;
     });
     container.innerHTML = html;
 }
 
-function deleteCustomCategoryFromSettings(index) {
-    const c = state.customCategories[index];
-    if (c) {
+function deleteCustomCategoryFromSettings(name, type) {
+    const index = state.customCategories.findIndex(c => c.name === name && c.type === type);
+    if (index !== -1) {
+        const c = state.customCategories[index];
         let deletedCategories = JSON.parse(localStorage.getItem('transaksiku_deleted_categories') || '[]');
         deletedCategories.push(`${c.name.toLowerCase()}_${c.type}`);
         localStorage.setItem('transaksiku_deleted_categories', JSON.stringify(deletedCategories));
-    }
 
-    state.customCategories.splice(index, 1);
-    saveData();
-    renderSettingsCustomCategories();
-    updateCategoryOptions();
-    showToast('Kategori kustom dihapus.');
+        state.customCategories.splice(index, 1);
+        saveData();
+        renderSettingsCustomCategories();
+        updateCategoryOptions();
+        showToast('Kategori kustom dihapus.');
+    }
 }
 
 // --- DISPLAY SETTINGS ---
