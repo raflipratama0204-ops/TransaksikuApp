@@ -120,47 +120,12 @@ async function handleResetAllData() {
         showToast('Menghapus data...');
         try {
             if (isOnline) {
-                // 1. Matikan pendengar real-time untuk mencegah sinkronisasi balik (race condition)
-                if (typeof unsubscribeRealtime === 'function') {
-                    unsubscribeRealtime();
-                }
-                if (typeof setUnsubscribeRealtime === 'function') {
-                    setUnsubscribeRealtime(null);
-                }
-
-                // Setel flag reset agar tidak menarik kembali data cloud lama setelah reload
-                localStorage.setItem('transaksiku_resetting', 'true');
-
-                // 2. Kosongkan data secara lokal terlebih dahulu
-                localStorage.removeItem('keuangan_wallets28');
-                localStorage.removeItem('keuangan_transactions28');
-                localStorage.removeItem('transaksiku_custom_categories');
-                localStorage.removeItem('transaksiku_hide_balances');
-                localStorage.removeItem('transaksiku_deleted_tx_ids');
-                localStorage.removeItem('transaksiku_deleted_wallet_ids');
-                localStorage.removeItem('transaksiku_deleted_categories');
-                
-                // Reset state in-memory
-                state.wallets = [
-                    { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
-                    { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
-                    { id: 3, name: 'Portofolio Saham', balance: 0, type: 'invest' }
-                ];
-                state.transactions = [];
-                state.customCategories = [];
-
-                // 3. Kosongkan data di cloud (Firestore)
-                const uid = auth.currentUser.uid;
-                if (db && typeof db.collection === 'function') {
-                    await db.collection('user_sync').doc(uid).set({
-                        user_id: uid,
-                        wallets: [],
-                        transactions: [],
-                        custom_categories: [],
-                        updated_at: new Date().toISOString()
-                    }).catch(err => {
-                        console.error("Gagal mengosongkan data cloud:", err);
-                    });
+                if (typeof clearAllDataCloudAndLocal === 'function') {
+                    await clearAllDataCloudAndLocal();
+                } else {
+                    localStorage.removeItem('keuangan_wallets28');
+                    localStorage.removeItem('keuangan_transactions28');
+                    localStorage.removeItem('transaksiku_custom_categories');
                 }
             } else {
                 // Untuk user offline, hapus semua
@@ -168,7 +133,10 @@ async function handleResetAllData() {
             }
         } catch (e) {
             console.error("Kesalahan saat menghapus data:", e);
-            localStorage.clear();
+            localStorage.setItem('transaksiku_resetting', 'true');
+            localStorage.removeItem('keuangan_wallets28');
+            localStorage.removeItem('keuangan_transactions28');
+            localStorage.removeItem('transaksiku_custom_categories');
         }
 
         showToast('Seluruh data berhasil dihapus!');

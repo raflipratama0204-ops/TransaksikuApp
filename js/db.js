@@ -258,3 +258,43 @@ function subscribeToCloudChanges(userId) {
 function setUnsubscribeRealtime(val) {
     unsubscribeRealtime = val;
 }
+
+async function clearAllDataCloudAndLocal() {
+    if (unsubscribeRealtime) {
+        unsubscribeRealtime();
+        unsubscribeRealtime = null;
+    }
+
+    localStorage.setItem('transaksiku_resetting', 'true');
+
+    localStorage.removeItem('keuangan_wallets28');
+    localStorage.removeItem('keuangan_transactions28');
+    localStorage.removeItem('transaksiku_custom_categories');
+    localStorage.removeItem('transaksiku_hide_balances');
+    localStorage.removeItem('transaksiku_deleted_tx_ids');
+    localStorage.removeItem('transaksiku_deleted_wallet_ids');
+    localStorage.removeItem('transaksiku_deleted_categories');
+
+    state.wallets = [
+        { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
+        { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
+        { id: 3, name: 'Portofolio Saham', balance: 0, type: 'invest' }
+    ];
+    state.transactions = [];
+    state.customCategories = [];
+
+    if (localStorage.getItem('transaksiku_user_logged_in') === 'true') {
+        const user = auth.currentUser;
+        if (user && db && typeof db.collection === 'function') {
+            await db.collection('user_sync').doc(user.uid).set({
+                user_id: user.uid,
+                wallets: [],
+                transactions: [],
+                custom_categories: [],
+                updated_at: new Date().toISOString()
+            });
+        }
+    }
+}
+
+window.clearAllDataCloudAndLocal = clearAllDataCloudAndLocal;
