@@ -228,6 +228,45 @@ async function syncLocalToCloud(userId) {
 // Berlangganan perubahan data cloud secara Realtime menggunakan Firestore Snapshot
 let unsubscribeRealtime = null;
 
+function areWalletsEqual(arrA, arrB) {
+    if (!arrA || !arrB) return false;
+    if (arrA.length !== arrB.length) return false;
+    for (let i = 0; i < arrA.length; i++) {
+        const a = arrA[i];
+        const b = arrB[i];
+        if (a.id !== b.id || a.name !== b.name || a.balance !== b.balance || a.type !== b.type) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function areTransactionsEqual(arrA, arrB) {
+    if (!arrA || !arrB) return false;
+    if (arrA.length !== arrB.length) return false;
+    for (let i = 0; i < arrA.length; i++) {
+        const a = arrA[i];
+        const b = arrB[i];
+        if (a.id !== b.id || a.timestamp !== b.timestamp || a.desc !== b.desc || a.mainType !== b.mainType || a.category !== b.category || a.amount !== b.amount || a.walletId !== b.walletId) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function areCategoriesEqual(arrA, arrB) {
+    if (!arrA || !arrB) return false;
+    if (arrA.length !== arrB.length) return false;
+    for (let i = 0; i < arrA.length; i++) {
+        const a = arrA[i];
+        const b = arrB[i];
+        if (a.name !== b.name || a.icon !== b.icon || a.type !== b.type) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function subscribeToCloudChanges(userId) {
     if (unsubscribeRealtime) {
         unsubscribeRealtime();
@@ -280,9 +319,9 @@ function subscribeToCloudChanges(userId) {
             const currentCategories = JSON.parse(localStorage.getItem('transaksiku_custom_categories') || '[]');
 
             const hasChanges = 
-                JSON.stringify(currentTransactions) !== JSON.stringify(merged.transactions) ||
-                JSON.stringify(currentWallets) !== JSON.stringify(merged.wallets) ||
-                JSON.stringify(currentCategories) !== JSON.stringify(merged.customCategories);
+                !areTransactionsEqual(currentTransactions, merged.transactions) ||
+                !areWalletsEqual(currentWallets, merged.wallets) ||
+                !areCategoriesEqual(currentCategories, merged.customCategories);
 
             if (hasChanges) {
                 localStorage.setItem('keuangan_wallets28', JSON.stringify(merged.wallets));
@@ -306,9 +345,9 @@ function subscribeToCloudChanges(userId) {
                 const cloudCategories = cloudData.custom_categories || [];
 
                 const needsUpload =
-                    JSON.stringify(cloudWallets) !== JSON.stringify(merged.wallets) ||
-                    JSON.stringify(cloudTransactions) !== JSON.stringify(merged.transactions) ||
-                    JSON.stringify(cloudCategories) !== JSON.stringify(merged.customCategories);
+                    !areWalletsEqual(cloudWallets, merged.wallets) ||
+                    !areTransactionsEqual(cloudTransactions, merged.transactions) ||
+                    !areCategoriesEqual(cloudCategories, merged.customCategories);
 
                 if (needsUpload) {
                     syncLocalToCloud(userId).catch(err => console.error('Cloud sync from listener failed:', err));
