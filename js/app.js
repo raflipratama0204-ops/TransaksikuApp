@@ -128,6 +128,9 @@ async function handleResetAllData() {
                     setUnsubscribeRealtime(null);
                 }
 
+                // Setel flag reset agar tidak menarik kembali data cloud lama setelah reload
+                localStorage.setItem('transaksiku_resetting', 'true');
+
                 // 2. Kosongkan data secara lokal terlebih dahulu
                 localStorage.removeItem('keuangan_wallets28');
                 localStorage.removeItem('keuangan_transactions28');
@@ -336,6 +339,16 @@ auth.onAuthStateChanged(async (user) => {
         localStorage.setItem('transaksiku_user_logged_in', 'true');
         checkEntryChoice();
         updateEntryUI();
+
+        if (localStorage.getItem('transaksiku_resetting') === 'true') {
+            localStorage.removeItem('transaksiku_resetting');
+            // Simpan data default (bersih) ke lokal & cloud, lalu aktifkan listener
+            saveData();
+            subscribeToCloudChanges(user.uid);
+            showToast('Seluruh data berhasil direset!');
+            return;
+        }
+
         await pullCloudData(user.uid);
         subscribeToCloudChanges(user.uid);
     } else {
