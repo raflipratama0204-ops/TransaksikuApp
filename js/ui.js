@@ -323,6 +323,10 @@ async function deleteWallet(id) {
 
     let isConfirm = await customConfirm(`Yakin ingin menghapus dompet [${w.name}]?`, 'Hapus Dompet');
     if (isConfirm) {
+        let deletedWalletIds = JSON.parse(localStorage.getItem('transaksiku_deleted_wallet_ids') || '[]');
+        deletedWalletIds.push(id);
+        localStorage.setItem('transaksiku_deleted_wallet_ids', JSON.stringify(deletedWalletIds));
+
         state.wallets = state.wallets.filter(wallet => wallet.id !== id);
         saveData();
     }
@@ -1363,6 +1367,10 @@ async function deleteTransaction(id) {
         }
     }
 
+    let deletedTxIds = JSON.parse(localStorage.getItem('transaksiku_deleted_tx_ids') || '[]');
+    deletedTxIds.push(id);
+    localStorage.setItem('transaksiku_deleted_tx_ids', JSON.stringify(deletedTxIds));
+
     state.transactions.splice(tIndex, 1);
     saveData();
 }
@@ -1983,6 +1991,13 @@ function renderSettingsCustomCategories() {
 }
 
 function deleteCustomCategoryFromSettings(index) {
+    const c = state.customCategories[index];
+    if (c) {
+        let deletedCategories = JSON.parse(localStorage.getItem('transaksiku_deleted_categories') || '[]');
+        deletedCategories.push(`${c.name.toLowerCase()}_${c.type}`);
+        localStorage.setItem('transaksiku_deleted_categories', JSON.stringify(deletedCategories));
+    }
+
     state.customCategories.splice(index, 1);
     saveData();
     renderSettingsCustomCategories();

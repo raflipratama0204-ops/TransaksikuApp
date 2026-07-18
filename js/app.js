@@ -83,7 +83,7 @@ async function updateEntryUI() {
     if (!btn || !statusTitle || !statusDesc) return;
 
     if (choice === 'online') {
-        btn.innerHTML = '<span>Keluar Akun Google</span>';
+        btn.innerHTML = '<span>Keluar Akun / Logout</span>';
         btn.style.background = 'var(--danger)';
         btn.style.color = 'white';
 
@@ -442,3 +442,112 @@ setInterval(checkDailyReminder, 60 * 60 * 1000);
 
 setTimeout(checkDebtReminders, 6000);
 setInterval(checkDebtReminders, 60 * 60 * 1000);
+
+// --- EMAIL & PASSWORD AUTHENTICATION ---
+let emailAuthMode = 'login'; // 'login' atau 'register'
+
+function toggleEmailAuthMode(e) {
+    if (e) e.preventDefault();
+    const title = document.getElementById('email-auth-title');
+    const toggleLink = document.getElementById('email-auth-toggle-mode');
+    const submitBtn = document.getElementById('email-auth-submit-btn');
+    if (!title || !toggleLink || !submitBtn) return;
+
+    if (emailAuthMode === 'login') {
+        emailAuthMode = 'register';
+        title.innerText = 'Daftar Akun Baru';
+        submitBtn.innerText = 'Daftar & Masuk';
+        toggleLink.innerText = 'Sudah punya akun? Masuk';
+    } else {
+        emailAuthMode = 'login';
+        title.innerText = 'Masuk dengan Email';
+        submitBtn.innerText = 'Masuk';
+        toggleLink.innerText = 'Belum punya akun? Daftar';
+    }
+}
+
+async function submitEmailAuth() {
+    const emailInput = document.getElementById('email-auth-input');
+    const passwordInput = document.getElementById('email-auth-password');
+    if (!emailInput || !passwordInput) return;
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+        showToast('Email dan Password tidak boleh kosong!');
+        return;
+    }
+
+    if (password.length < 6) {
+        showToast('Password minimal 6 karakter!');
+        return;
+    }
+
+    if (typeof firebase === 'undefined' || !auth) {
+        showToast('Inisialisasi Firebase gagal.');
+        return;
+    }
+
+    showToast('Memproses...');
+    try {
+        if (emailAuthMode === 'login') {
+            await auth.signInWithEmailAndPassword(email, password);
+            showToast('Berhasil masuk!');
+        } else {
+            await auth.createUserWithEmailAndPassword(email, password);
+            showToast('Berhasil terdaftar dan masuk!');
+        }
+        localStorage.setItem('transaksiku_entry_choice', 'online');
+        localStorage.setItem('transaksiku_user_logged_in', 'true');
+        
+        // Bersihkan input
+        emailInput.value = '';
+        passwordInput.value = '';
+        
+        checkEntryChoice();
+        updateEntryUI();
+    } catch (error) {
+        console.error("Email auth error:", error);
+        let errorMsg = 'Gagal autentikasi: ' + error.message;
+        if (error.code === 'auth/wrong-password') {
+            errorMsg = 'Kata sandi salah!';
+        } else if (error.code === 'auth/user-not-found') {
+            errorMsg = 'Akun email tidak ditemukan!';
+        } else if (error.code === 'auth/email-already-in-use') {
+            errorMsg = 'Email sudah digunakan oleh akun lain!';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMsg = 'Format email tidak valid!';
+        }
+        showToast(errorMsg);
+    }
+}
+
+async function handleForgotPassword(e) {
+    if (e) e.preventDefault();
+    const emailInput = document.getElementById('email-auth-input');
+    if (!emailInput) return;
+    
+    let email = emailInput.value.trim();
+    if (!email) {
+        email = await customPrompt('Masukkan alamat email untuk pemulihan kata sandi:', '', 'Lupa Sandi', false);
+    }
+    
+    if (!email || !email.trim()) {
+        showToast('Masukkan email pemulihan terlebih dahulu!');
+        return;
+    }
+    
+    try {
+        await auth.sendPasswordResetEmail(email.trim());
+        customAlert(`Link reset kata sandi telah dikirim ke email: ${email}\nSilakan periksa kotak masuk/spam Anda.`, 'Reset Sandi Terkirim');
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        showToast('Gagal mengirim email reset: ' + error.message);
+    }
+}
+
+// Expose to window
+window.toggleEmailAuthMode = toggleEmailAuthMode;
+window.submitEmailAuth = submitEmailAuth;
+window.handleForgotPassword = handleForgotPassword;
