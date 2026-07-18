@@ -283,18 +283,43 @@ async function clearAllDataCloudAndLocal() {
     state.transactions = [];
     state.customCategories = [];
 
+    // Tulis langsung data default bersih ke localStorage agar state lokal sinkron
+    localStorage.setItem('keuangan_wallets28', JSON.stringify(state.wallets));
+    localStorage.setItem('keuangan_transactions28', JSON.stringify(state.transactions));
+    localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
+
+    notifyDataChanged();
+
     if (localStorage.getItem('transaksiku_user_logged_in') === 'true') {
         const user = auth.currentUser;
         if (user && db && typeof db.collection === 'function') {
+            // Tulis data default ke cloud (bukan array kosong agar tipe data setara dengan lokal)
             await db.collection('user_sync').doc(user.uid).set({
                 user_id: user.uid,
-                wallets: [],
+                wallets: state.wallets,
                 transactions: [],
                 custom_categories: [],
                 updated_at: new Date().toISOString()
             });
+
+            // Tunggu hingga Firestore menyelesaikan proses sinkronisasi antrean ke server
+            if (typeof db.waitForPendingWrites === 'function') {
+                try {
+                    await Promise.race([
+                        db.waitForPendingWrites(),
+                        new Promise(resolve => setTimeout(resolve, 3000))
+                    ]);
+                } catch (e) {
+                    console.warn("Firestore pending writes timeout:", e);
+                }
+            }
+
+            // Aktifkan kembali listener setelah data server bersih
+            subscribeToCloudChanges(user.uid);
         }
     }
+    
+    localStorage.removeItem('transaksiku_resetting');
 }
 
 window.clearAllDataCloudAndLocal = clearAllDataCloudAndLocal;

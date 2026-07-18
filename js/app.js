@@ -130,17 +130,29 @@ async function handleResetAllData() {
             } else {
                 // Untuk user offline, hapus semua
                 localStorage.clear();
+                state.wallets = [
+                    { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
+                    { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
+                    { id: 3, name: 'Portofolio Saham', balance: 0, type: 'invest' }
+                ];
+                state.transactions = [];
+                state.customCategories = [];
+                
+                localStorage.setItem('keuangan_wallets28', JSON.stringify(state.wallets));
+                localStorage.setItem('keuangan_transactions28', JSON.stringify(state.transactions));
+                localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
+                
+                notifyDataChanged();
             }
+            showToast('Seluruh data berhasil dihapus!');
         } catch (e) {
             console.error("Kesalahan saat menghapus data:", e);
             localStorage.setItem('transaksiku_resetting', 'true');
             localStorage.removeItem('keuangan_wallets28');
             localStorage.removeItem('keuangan_transactions28');
             localStorage.removeItem('transaksiku_custom_categories');
+            setTimeout(() => window.location.reload(), 1000);
         }
-
-        showToast('Seluruh data berhasil dihapus!');
-        setTimeout(() => window.location.reload(), 1000);
     }
 }
 
