@@ -130,6 +130,39 @@ async function pullCloudData(userId) {
 
         if (doc.exists) {
             const cloudData = doc.data();
+            
+            // Periksa apakah cloud mengalami reset baru dari perangkat lain
+            const cloudReset = cloudData.last_reset;
+            const localReset = localStorage.getItem('transaksiku_last_reset');
+            if (cloudReset && cloudReset !== localReset) {
+                localStorage.setItem('transaksiku_last_reset', cloudReset);
+                
+                localStorage.removeItem('keuangan_wallets28');
+                localStorage.removeItem('keuangan_transactions28');
+                localStorage.removeItem('transaksiku_custom_categories');
+                localStorage.removeItem('transaksiku_hide_balances');
+                localStorage.removeItem('transaksiku_deleted_tx_ids');
+                localStorage.removeItem('transaksiku_deleted_wallet_ids');
+                localStorage.removeItem('transaksiku_deleted_categories');
+                
+                state.wallets = [
+                    { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
+                    { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
+                    { id: 3, name: 'Portofolio Saham', balance: 0, type: 'invest' }
+                ];
+                state.transactions = [];
+                state.customCategories = [];
+                
+                localStorage.setItem('keuangan_wallets28', JSON.stringify(state.wallets));
+                localStorage.setItem('keuangan_transactions28', JSON.stringify(state.transactions));
+                localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
+                
+                notifyDataChanged();
+                await syncLocalToCloud(userId);
+                showToast('Sinkronisasi data kosong (reset) dari perangkat lain selesai!');
+                return;
+            }
+
             const localData = {
                 wallets: JSON.parse(localStorage.getItem('keuangan_wallets28') || '[]'),
                 transactions: JSON.parse(localStorage.getItem('keuangan_transactions28') || '[]'),
@@ -176,6 +209,7 @@ async function syncLocalToCloud(userId) {
     const walletsData = JSON.parse(localStorage.getItem('keuangan_wallets28') || '[]');
     const transactionsData = JSON.parse(localStorage.getItem('keuangan_transactions28') || '[]');
     const categoriesData = JSON.parse(localStorage.getItem('transaksiku_custom_categories') || '[]');
+    const lastReset = localStorage.getItem('transaksiku_last_reset') || '';
 
     try {
         await db.collection('user_sync').doc(userId).set({
@@ -183,6 +217,7 @@ async function syncLocalToCloud(userId) {
             wallets: walletsData,
             transactions: transactionsData,
             custom_categories: categoriesData,
+            last_reset: lastReset,
             updated_at: new Date().toISOString()
         }, { merge: true });
     } catch (error) {
@@ -202,6 +237,36 @@ function subscribeToCloudChanges(userId) {
         if (doc.exists) {
             const cloudData = doc.data();
             
+            // Periksa apakah cloud mengalami reset baru dari perangkat lain
+            const cloudReset = cloudData.last_reset;
+            const localReset = localStorage.getItem('transaksiku_last_reset');
+            if (cloudReset && cloudReset !== localReset) {
+                localStorage.setItem('transaksiku_last_reset', cloudReset);
+                
+                localStorage.removeItem('keuangan_wallets28');
+                localStorage.removeItem('keuangan_transactions28');
+                localStorage.removeItem('transaksiku_custom_categories');
+                localStorage.removeItem('transaksiku_hide_balances');
+                localStorage.removeItem('transaksiku_deleted_tx_ids');
+                localStorage.removeItem('transaksiku_deleted_wallet_ids');
+                localStorage.removeItem('transaksiku_deleted_categories');
+                
+                state.wallets = [
+                    { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
+                    { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
+                    { id: 3, name: 'Portofolio Saham', balance: 0, type: 'invest' }
+                ];
+                state.transactions = [];
+                state.customCategories = [];
+                
+                localStorage.setItem('keuangan_wallets28', JSON.stringify(state.wallets));
+                localStorage.setItem('keuangan_transactions28', JSON.stringify(state.transactions));
+                localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
+                
+                notifyDataChanged();
+                return; // Stop here, no merge or upload back!
+            }
+
             const localData = {
                 wallets: JSON.parse(localStorage.getItem('keuangan_wallets28') || '[]'),
                 transactions: JSON.parse(localStorage.getItem('keuangan_transactions28') || '[]'),
