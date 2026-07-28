@@ -7,6 +7,26 @@ const state = {
     ],
     transactions: JSON.parse(localStorage.getItem('keuangan_transactions28')) || [],
     customCategories: JSON.parse(localStorage.getItem('transaksiku_custom_categories')) || [],
+    budgetSettings: JSON.parse(localStorage.getItem('transaksiku_budget_settings')) || {
+        activeMode: 'envelope',
+        monthlyTotal: 3600000,
+        period: 'monthly',
+        categoryBudgets: {
+            "Makanan & Minuman": 1500000,
+            "Transportasi": 500000,
+            "Belanja": 500000,
+            "Tagihan & Utilitas": 750000,
+            "Hiburan": 350000
+        },
+        allocations503020: { needsPercent: 50, wantsPercent: 30, savingsPercent: 20 },
+        needsCategories: ["Makanan & Minuman", "Transportasi", "Tagihan & Utilitas", "Kesehatan", "Pendidikan"],
+        wantsCategories: ["Belanja", "Hiburan", "Jalan-jalan", "Hobi"],
+        savingsCategories: ["Investasi", "Tabungan", "Dana Darurat"],
+        rolloverEnabled: true,
+        rolloverBalance: 0,
+        lastRolloverMonth: null,
+        notificationsEnabled: true
+    },
     hideBalancesActive: localStorage.getItem('transaksiku_hide_balances') === 'true',
     myChart: null,
     myComparisonChart: null,
@@ -49,6 +69,7 @@ function saveData() {
     localStorage.setItem('keuangan_wallets28', JSON.stringify(state.wallets));
     localStorage.setItem('keuangan_transactions28', JSON.stringify(state.transactions));
     localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
+    localStorage.setItem('transaksiku_budget_settings', JSON.stringify(state.budgetSettings));
     notifyDataChanged();
     triggerCloudSync();
 }
@@ -269,9 +290,11 @@ function areCategoriesEqual(arrA, arrB) {
 
 function subscribeToCloudChanges(userId) {
     if (unsubscribeRealtime) {
+        console.log("[SYNC RESET DEBUG] Unsubscribing existing listener.");
         unsubscribeRealtime();
     }
 
+    console.log("[SYNC RESET DEBUG] Subscribing to cloud changes for UID:", userId);
     unsubscribeRealtime = db.collection('user_sync').doc(userId).onSnapshot((doc) => {
         if (doc.exists) {
             const cloudData = doc.data();
@@ -279,7 +302,10 @@ function subscribeToCloudChanges(userId) {
             // Periksa apakah cloud mengalami reset baru dari perangkat lain
             const cloudReset = cloudData.last_reset;
             const localReset = localStorage.getItem('transaksiku_last_reset');
+            console.log(`[SYNC RESET DEBUG] Snapshot received. cloudReset: "${cloudReset}", localReset: "${localReset}"`);
+            
             if (cloudReset && cloudReset !== localReset) {
+                console.log("[SYNC RESET DEBUG] Reset triggered on another device! Wiping local state...");
                 localStorage.setItem('transaksiku_last_reset', cloudReset);
                 
                 localStorage.removeItem('keuangan_wallets28');
@@ -303,6 +329,7 @@ function subscribeToCloudChanges(userId) {
                 localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
                 
                 notifyDataChanged();
+                console.log("[SYNC RESET DEBUG] Local state wiped successfully.");
                 return; // Stop here, no merge or upload back!
             }
 
@@ -324,6 +351,7 @@ function subscribeToCloudChanges(userId) {
                 !areCategoriesEqual(currentCategories, merged.customCategories);
 
             if (hasChanges) {
+                console.log("[SYNC RESET DEBUG] Changes detected. Updating local storage.");
                 localStorage.setItem('keuangan_wallets28', JSON.stringify(merged.wallets));
                 localStorage.setItem('keuangan_transactions28', JSON.stringify(merged.transactions));
                 localStorage.setItem('transaksiku_custom_categories', JSON.stringify(merged.customCategories));
@@ -350,6 +378,7 @@ function subscribeToCloudChanges(userId) {
                     !areCategoriesEqual(cloudCategories, merged.customCategories);
 
                 if (needsUpload) {
+                    console.log("[SYNC RESET DEBUG] Cloud needs upload. Syncing local to cloud.");
                     syncLocalToCloud(userId).catch(err => console.error('Cloud sync from listener failed:', err));
                 }
             }
@@ -365,11 +394,16 @@ function setUnsubscribeRealtime(val) {
 
 async function clearAllDataCloudAndLocal() {
     if (unsubscribeRealtime) {
+        console.log("[SYNC RESET DEBUG] Unsubscribing existing listener.");
         unsubscribeRealtime();
         unsubscribeRealtime = null;
     }
 
+    const resetTimestamp = new Date().toISOString();
+    console.log("[SYNC RESET DEBUG] Initializing clearAllDataCloudAndLocal with timestamp:", resetTimestamp);
+
     localStorage.setItem('transaksiku_resetting', 'true');
+    localStorage.setItem('transaksiku_last_reset', resetTimestamp);
 
     localStorage.removeItem('keuangan_wallets28');
     localStorage.removeItem('keuangan_transactions28');
@@ -397,18 +431,21 @@ async function clearAllDataCloudAndLocal() {
     if (localStorage.getItem('transaksiku_user_logged_in') === 'true') {
         const user = auth.currentUser;
         if (user && db && typeof db.collection === 'function') {
-            // Tulis data default ke cloud (bukan array kosong agar tipe data setara dengan lokal)
+            console.log("[SYNC RESET DEBUG] Writing empty/default state to cloud with last_reset:", resetTimestamp);
+            // Tulis data default ke cloud (bukan array kosong agar tipe data setara dengan lokal) beserta last_reset
             await db.collection('user_sync').doc(user.uid).set({
                 user_id: user.uid,
                 wallets: state.wallets,
                 transactions: [],
                 custom_categories: [],
-                updated_at: new Date().toISOString()
+                last_reset: resetTimestamp,
+                updated_at: resetTimestamp
             });
 
             // Tunggu hingga Firestore menyelesaikan proses sinkronisasi antrean ke server
             if (typeof db.waitForPendingWrites === 'function') {
                 try {
+                    console.log("[SYNC RESET DEBUG] Waiting for pending writes...");
                     await Promise.race([
                         db.waitForPendingWrites(),
                         new Promise(resolve => setTimeout(resolve, 3000))
@@ -419,11 +456,13 @@ async function clearAllDataCloudAndLocal() {
             }
 
             // Aktifkan kembali listener setelah data server bersih
+            console.log("[SYNC RESET DEBUG] Resubscribing to cloud listener.");
             subscribeToCloudChanges(user.uid);
         }
     }
     
     localStorage.removeItem('transaksiku_resetting');
+    console.log("[SYNC RESET DEBUG] clearAllDataCloudAndLocal completed.");
 }
 
 window.clearAllDataCloudAndLocal = clearAllDataCloudAndLocal;

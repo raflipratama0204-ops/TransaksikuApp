@@ -448,6 +448,99 @@
         </div>
     </div>
 
+    <!-- BUDGET SETUP MODAL -->
+    <div id="budget-setup-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 520px;">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; color: var(--primary);">
+                ⚙️ Pengaturan Batas Anggaran
+            </h3>
+            
+            <div class="form-group">
+                <label>Pilih Metode Budgeting Utama</label>
+                <select id="setup-budget-mode" onchange="toggleBudgetSetupFields()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);">
+                    <option value="envelope">Envelope System (Batas Per Kategori Spesifik)</option>
+                    <option value="50_30_20">Metode 50/30/20 (Kebutuhan / Keinginan / Tabungan)</option>
+                    <option value="custom">Custom Budget (Bebas Tentukan Total)</option>
+                </select>
+            </div>
+
+            <!-- 50/30/20 Fields -->
+            <div id="setup-503020-fields" style="display: none; background: var(--bg); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border);">
+                <div class="form-group">
+                    <label>Total Pendapatan / Anggaran Bulanan (Rp)</label>
+                    <input type="text" id="setup-503020-total" placeholder="0" oninput="formatCurrencyInput(this)">
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                    💡 Sistem akan otomatis mengalokasikan:
+                    <ul style="margin: 4px 0 0 16px; padding: 0;">
+                        <li><b>50% Needs (Kebutuhan)</b>: Makanan, Transportasi, Tagihan</li>
+                        <li><b>30% Wants (Keinginan)</b>: Belanja, Hiburan, Hobi</li>
+                        <li><b>20% Savings (Tabungan/Investasi)</b>: Tabungan & Portofolio</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Envelope Categories Fields -->
+            <div id="setup-envelope-fields" style="background: var(--bg); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); max-height: 250px; overflow-y: auto;">
+                <h4 style="font-size: 0.85rem; margin-bottom: 8px; color: var(--text-main);">Tentukan Anggaran Per Kategori:</h4>
+                <div id="setup-envelope-list">
+                    <!-- Dinamis via JS -->
+                </div>
+            </div>
+
+            <!-- Custom Budget Fields -->
+            <div id="setup-custom-fields" style="display: none; background: var(--bg); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border);">
+                <div class="form-group">
+                    <label>Total Target Anggaran (Rp)</label>
+                    <input type="text" id="setup-custom-total" placeholder="0" oninput="formatCurrencyInput(this)">
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--bg); border-radius: 10px; margin-bottom: 15px;">
+                <span style="font-size: 0.85rem; font-weight: 600;">Fitur Rollover Sisa Budget Bulan Lalu</span>
+                <label class="switch">
+                    <input type="checkbox" id="setup-rollover-toggle" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button onclick="closeBudgetSetupModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                <button onclick="saveBudgetSettingsFromModal()" class="btn btn-primary" style="margin: 0;">Simpan Anggaran</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUDGET REALLOCATE MODAL -->
+    <div id="budget-reallocate-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 440px;">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; color: var(--accent);">
+                🔄 Pindahkan Alokasi Anggaran
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Pindahkan sisa anggaran dari satu kategori ke kategori lain yang kekurangan.</p>
+            
+            <div class="form-group">
+                <label>Pindahkan Dari Kategori (Sumber):</label>
+                <select id="reallocate-from-category" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);"></select>
+            </div>
+
+            <div class="form-group">
+                <label>Ke Kategori Tujuan:</label>
+                <select id="reallocate-to-category" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);"></select>
+            </div>
+
+            <div class="form-group">
+                <label>Nominal yang Dipindahkan (Rp)</label>
+                <input type="text" id="reallocate-amount" placeholder="0" oninput="formatCurrencyInput(this)">
+            </div>
+
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button onclick="closeReallocateModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                <button onclick="submitBudgetReallocation()" class="btn btn-primary" style="margin: 0;">Pindahkan Saldo</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOP BAR HEADER -->
     <div class="top-bar">
         <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu Utama">
@@ -550,6 +643,22 @@
                 <div class="summary-card invest" id="card-total-portfolio">
                     <p>Total Portofolio Investasi</p>
                     <h2 id="sum-portfolio">Rp 0</h2>
+                </div>
+            </div>
+
+            <!-- DASHBOARD BUDGET WIDGET -->
+            <div class="card" style="margin-top: 15px; margin-bottom: 15px; border: 1px solid var(--accent); background: var(--card); padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.1rem;">🎯</span>
+                        <h4 style="margin: 0; font-size: 1rem; color: var(--text-main); font-weight: 700;">Status Batas Anggaran Bulanan</h4>
+                    </div>
+                    <button onclick="navigateTo('budget')" style="background: none; border: none; color: var(--accent); font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                        Detail & Kelola →
+                    </button>
+                </div>
+                <div id="dashboard-budget-widget-content">
+                    <!-- Dinamis via JS -->
                 </div>
             </div>
 
@@ -834,6 +943,85 @@
                 </div>
             </div>
         </div>
+
+        <!-- VIEW: BUDGET & ANGGARAN -->
+        <div id="view-budget" class="app-view">
+            <div class="header-title-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <div class="header-title" style="margin-bottom: 0;">
+                    <h1>Manajemen & Batas Anggaran</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Kendalikan pengeluaran bulanan Anda secara proaktif & disiplin.</p>
+                </div>
+                <button onclick="openBudgetSetupModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px;">
+                    ⚙️ Atur Anggaran
+                </button>
+            </div>
+
+            <!-- Mode Selector Chips -->
+            <div class="budget-mode-selector">
+                <button class="budget-mode-chip active" id="chip-mode-envelope" onclick="switchBudgetMode('envelope')">
+                    ✉️ Envelope System
+                </button>
+                <button class="budget-mode-chip" id="chip-mode-503020" onclick="switchBudgetMode('50_30_20')">
+                    📊 Metode 50/30/20
+                </button>
+                <button class="budget-mode-chip" id="chip-mode-custom" onclick="switchBudgetMode('custom')">
+                    🎯 Custom Budget
+                </button>
+            </div>
+
+            <!-- Hero Pacing Card -->
+            <div class="budget-hero-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TOTAL ANGGARAN BULAN INI</span>
+                        <h2 id="budget-hero-total" style="font-size: 1.6rem; color: var(--text-main); margin-top: 2px;">Rp 0</h2>
+                    </div>
+                    <div id="budget-pacing-badge-container">
+                        <span class="budget-pacing-badge safe" id="budget-pacing-badge">🟢 Aman</span>
+                    </div>
+                </div>
+
+                <!-- Progress Track -->
+                <div class="budget-progress-track">
+                    <div class="budget-progress-bar-fill safe" id="budget-hero-progress-fill" style="width: 0%;"></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: 15px;">
+                    <span id="budget-hero-spent-text" style="color: var(--text-muted);">Terpakai: Rp 0 (0%)</span>
+                    <span id="budget-hero-remaining-text" style="color: var(--accent);">Sisa: Rp 0</span>
+                </div>
+
+                <!-- Pacing & Daily Limit Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                    <div style="background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">⚡ Kecepatan Belanja (Pacing)</span>
+                        <span id="budget-pacing-status-text" style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">Normal (Sesuai Target)</span>
+                        <p id="budget-pacing-desc" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; line-height: 1.2;">Pengeluaran berjalan seimbang dengan sisa hari bulan ini.</p>
+                    </div>
+                    <div style="background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">📅 Batas Belanja Harian Aman</span>
+                        <span id="budget-daily-limit-text" style="font-size: 1.1rem; font-weight: 800; color: var(--success);">Rp 0 / hari</span>
+                        <p id="budget-daily-days-left" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; line-height: 1.2;">Berdasarkan sisa hari pada periode ini.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Mode Content Area -->
+            <div id="budget-mode-content">
+                <!-- Dinamis via renderBudgetView() -->
+            </div>
+
+            <!-- Gamification & Monthly Insights Card -->
+            <div class="card" style="margin-top: 20px; border: 1px solid var(--purple); background: var(--card);">
+                <h4 style="margin-bottom: 12px; color: var(--purple); border-bottom: 2px solid var(--purple); padding-bottom: 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>🏆 Insights Disiplin & Gamifikasi</span>
+                </h4>
+                <div id="budget-gamification-content">
+                    <!-- Dinamis via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- INSTALL PWA BANNER -->
@@ -861,6 +1049,9 @@
         </button>
         <button id="bottom-nav-dashboard" class="bottom-nav-item active" onclick="navigateTo('dashboard')" title="Dashboard">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        </button>
+        <button id="bottom-nav-budget" class="bottom-nav-item" onclick="navigateTo('budget')" title="Anggaran">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
         </button>
         <button id="bottom-nav-debt" class="bottom-nav-item" onclick="navigateTo('debt')" title="Hutang">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>

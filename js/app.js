@@ -305,6 +305,12 @@ registerDataChangedCallback(() => {
     if (typeof renderSettingsCustomCategories === 'function') {
         renderSettingsCustomCategories();
     }
+    if (typeof renderDashboardBudgetWidget === 'function') {
+        renderDashboardBudgetWidget();
+    }
+    if (typeof renderBudgetView === 'function') {
+        renderBudgetView();
+    }
 });
 
 let isInitialAuthCheck = true;

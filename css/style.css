@@ -1559,38 +1559,6 @@
             box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.15);
         }
 
-        /* CENTERPIECE FLOATING DASHBOARD NAV BUTTON */
-        #bottom-nav-dashboard {
-            background: linear-gradient(135deg, var(--accent), #6366f1);
-            color: #ffffff !important;
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            transform: translateY(-10px);
-            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
-            z-index: 10000;
-            border: 2.5px solid var(--card);
-        }
-        #bottom-nav-dashboard.active {
-            background: linear-gradient(135deg, var(--accent), #4f46e5);
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.4);
-        }
-        #bottom-nav-dashboard svg {
-            stroke: #ffffff !important;
-            width: 22px;
-            height: 22px;
-            transform: none !important;
-        }
-        #bottom-nav-dashboard:hover {
-            transform: translateY(-12px) scale(1.05);
-            box-shadow: 0 10px 22px rgba(79, 70, 229, 0.45);
-            background: linear-gradient(135deg, var(--accent), #4f46e5);
-        }
-        
-        body.dark-theme #bottom-nav-dashboard {
-            border-color: #1e293b; /* Dark theme card background match */
-        }
-
         /* Settings Modal Tab & Emoji Selection Styles */
         .settings-tab-btn {
             font-family: 'Inter', sans-serif;
@@ -2057,4 +2025,159 @@
                 max-height: 94vh;
             }
         }
+
+        /* BUDGETING FEATURE STYLES */
+        .budget-mode-selector {
+            display: flex;
+            gap: 8px;
+            background: var(--bg);
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .budget-mode-chip {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .budget-mode-chip.active {
+            background: var(--card);
+            color: var(--accent);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+            border: 1px solid var(--border);
+        }
+
+        body.dark-theme .budget-mode-chip.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .budget-hero-card {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(147, 51, 234, 0.08) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .budget-pacing-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .budget-pacing-badge.safe {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .budget-pacing-badge.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .budget-pacing-badge.danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .budget-progress-track {
+            height: 12px;
+            background: rgba(203, 213, 225, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            margin: 12px 0 8px 0;
+        }
+
+        body.dark-theme .budget-progress-track {
+            background: rgba(51, 65, 85, 0.6);
+        }
+
+        .budget-progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+        }
+
+        .budget-progress-bar-fill.safe {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .budget-progress-bar-fill.warning {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .budget-progress-bar-fill.danger {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .budget-category-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .budget-category-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        }
+
+        .budget-quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-budget-sub {
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-main);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-budget-sub:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
     
