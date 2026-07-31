@@ -241,6 +241,12 @@
             border-radius: 12px;
             border: 1px solid #e2e8f0;
             background: #fff;
+            position: relative;
+            overflow: visible;
+        }
+
+        #wallet-list {
+            overflow: visible;
         }
 
 
@@ -1489,29 +1495,29 @@
         /* BOTTOM NAVIGATION BAR STYLES */
         .bottom-nav {
             position: fixed;
-            bottom: 20px;
+            bottom: 14px;
             left: 50%;
             transform: translateX(-50%);
-            width: calc(100% - 32px);
-            max-width: 480px;
-            background: rgba(255, 255, 255, 0.75);
+            width: calc(100% - 16px);
+            max-width: 540px;
+            background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(226, 232, 240, 0.7);
-            box-shadow: 0 12px 30px -10px rgba(79, 70, 229, 0.15), 0 8px 20px -8px rgba(0, 0, 0, 0.05);
-            border-radius: 30px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 12px 30px -10px rgba(79, 70, 229, 0.18), 0 8px 20px -8px rgba(0, 0, 0, 0.08);
+            border-radius: 24px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding: 12px 10px;
+            padding: 6px 4px;
             z-index: 9999;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body.dark-theme .bottom-nav {
-            background: rgba(15, 23, 42, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5), 0 8px 20px -8px rgba(0, 0, 0, 0.4);
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), 0 8px 20px -8px rgba(0, 0, 0, 0.5);
         }
 
         .bottom-nav-item {
@@ -1525,8 +1531,8 @@
             padding: 0;
             border-radius: 50%;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 46px;
-            height: 46px;
+            width: 42px;
+            height: 42px;
             flex: none;
         }
 
@@ -2178,6 +2184,557 @@
         .btn-budget-sub:hover {
             border-color: var(--accent);
             color: var(--accent);
+        }
+
+        /* SAVINGS GOALS & TARGET TABUNGAN STYLES */
+        .emoji-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .emoji-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .emoji-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--accent);
+        }
+
+        .emoji-btn.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .savings-goal-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+        }
+
+        .savings-goal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.12);
+            border-color: rgba(139, 92, 246, 0.4);
+        }
+
+        .savings-goal-card.completed {
+            border: 2px solid var(--success);
+            background: linear-gradient(135deg, var(--card) 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        .savings-goal-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 12px 0 8px 0;
+            position: relative;
+        }
+
+        .savings-goal-progress-fill {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(90deg, #8b5cf6, #ec4899);
+        }
+
+        .savings-goal-progress-fill.completed {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .savings-goal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .btn-goal-deposit {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-goal-deposit:hover {
+            opacity: 0.9;
+        }
+
+        .btn-goal-detail {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-goal-detail:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* DEBT & RECEIVABLE GOAL-STYLE CARDS */
+        .debt-item-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+        }
+
+        .debt-item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(168, 85, 247, 0.12);
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+
+        .debt-item-card.completed {
+            border: 2px solid var(--success);
+            background: linear-gradient(135deg, var(--card) 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        .receivable-item-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+        }
+
+        .receivable-item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .receivable-item-card.completed {
+            border: 2px solid var(--success);
+            background: linear-gradient(135deg, var(--card) 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        .debt-due-alert-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* ==========================================
+           MOBILE RESPONSIVENESS & COMPACT SCALING
+           ========================================== */
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+
+            .app-container {
+                padding: 10px 10px 130px 10px !important;
+            }
+
+            .header-title h1 {
+                font-size: 1.35rem !important;
+                margin-bottom: 2px !important;
+            }
+
+            .header-title p {
+                font-size: 0.8rem !important;
+            }
+
+            .header-title-container {
+                margin-bottom: 14px !important;
+                gap: 8px !important;
+            }
+
+            .header-title-container button,
+            .header-title-container .btn {
+                width: 100% !important;
+                justify-content: center !important;
+                font-size: 0.8rem !important;
+                padding: 8px 12px !important;
+            }
+
+            .card {
+                padding: 14px 12px !important;
+                border-radius: 12px !important;
+                margin-bottom: 14px !important;
+            }
+
+            /* HERO CARDS COMPACT SCALING */
+            #debt-summary-hero-card,
+            #receivables-summary-hero-card,
+            .savings-goal-hero-card,
+            .budget-hero-card {
+                padding: 10px 10px !important;
+                border-radius: 10px !important;
+                margin-bottom: 10px !important;
+            }
+
+            #debt-summary-hero-card h2,
+            #receivables-summary-hero-card h2,
+            .budget-hero-card h2 {
+                font-size: 1.05rem !important;
+                margin: 1px 0 !important;
+            }
+
+            #debt-summary-hero-card p,
+            #receivables-summary-hero-card p {
+                font-size: 0.72rem !important;
+                margin: 1px 0 !important;
+            }
+
+            /* BUDGETING COMPACT MOBILE SCALING */
+            .budget-mode-chip {
+                padding: 4px 8px !important;
+                font-size: 0.7rem !important;
+                border-radius: 6px !important;
+            }
+
+            .budget-category-item {
+                padding: 8px 10px !important;
+                border-radius: 8px !important;
+                margin-bottom: 6px !important;
+            }
+
+            .budget-pacing-badge {
+                font-size: 0.68rem !important;
+                padding: 2px 6px !important;
+                border-radius: 4px !important;
+            }
+
+            .budget-progress-track {
+                height: 7px !important;
+                margin: 4px 0 !important;
+            }
+
+            .btn-budget-sub {
+                padding: 3px 6px !important;
+                font-size: 0.68rem !important;
+            }
+
+            /* GRID RESPONSIVENESS */
+            #debt-cards-grid-container,
+            #receivables-cards-grid-container,
+            #savings-goals-grid-container {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+
+            /* ITEM CARDS ULTRA-COMPACT STYLING FOR DEBT & RECEIVABLES */
+            .debt-item-card,
+            .receivable-item-card,
+            .savings-goal-card {
+                padding: 8px 10px !important;
+                border-radius: 8px !important;
+                margin-bottom: 6px !important;
+            }
+
+            .debt-item-card h4,
+            .receivable-item-card h4,
+            .savings-goal-card h4 {
+                font-size: 0.82rem !important;
+            }
+
+            .debt-item-card p,
+            .receivable-item-card p {
+                font-size: 0.72rem !important;
+                margin-bottom: 2px !important;
+            }
+
+            .debt-item-card .savings-goal-actions,
+            .receivable-item-card .savings-goal-actions,
+            .savings-goal-card .savings-goal-actions {
+                margin-top: 6px !important;
+                gap: 4px !important;
+            }
+
+            .btn-goal-deposit,
+            .btn-goal-detail {
+                padding: 5px 8px !important;
+                font-size: 0.72rem !important;
+                border-radius: 6px !important;
+            }
+
+            .debt-due-alert-box {
+                padding: 8px 10px !important;
+                border-radius: 8px !important;
+                font-size: 0.75rem !important;
+            }
+
+            /* MODAL RESPONSIVENESS FOR MOBILE */
+            .modal-overlay {
+                padding: 10px !important;
+                align-items: flex-end !important;
+            }
+
+            .modal-box {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 18px 18px 0 0 !important;
+                padding: 16px 14px !important;
+                max-height: 85vh !important;
+                overflow-y: auto !important;
+            }
+
+            .modal-box h3 {
+                font-size: 1.05rem !important;
+                padding-bottom: 8px !important;
+                margin-bottom: 12px !important;
+            }
+
+            .form-group {
+                margin-bottom: 10px !important;
+            }
+
+            .form-group label {
+                font-size: 0.78rem !important;
+                margin-bottom: 4px !important;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 8px 10px !important;
+                font-size: 0.82rem !important;
+                border-radius: 8px !important;
+            }
+
+            .modal-actions {
+                margin-top: 12px !important;
+                gap: 8px !important;
+            }
+
+            .modal-actions .btn {
+                padding: 8px 12px !important;
+                font-size: 0.8rem !important;
+            }
+
+            /* TRANSACTION CARDS SCALING */
+            .transaction-card {
+                padding: 10px 12px !important;
+                border-radius: 10px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .t-card-desc {
+                font-size: 0.85rem !important;
+            }
+
+            .t-card-amount {
+                font-size: 0.95rem !important;
+            }
+
+            .t-card-date {
+                font-size: 0.72rem !important;
+            }
+
+            /* EMOJI GRID IN MODALS */
+            .emoji-picker-grid {
+                grid-template-columns: repeat(6, 1fr) !important;
+                gap: 6px !important;
+                max-height: 120px !important;
+            }
+
+            .emoji-btn {
+                font-size: 1.25rem !important;
+                padding: 6px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-title h1 {
+                font-size: 1.2rem !important;
+            }
+
+            #debt-summary-hero-card h2,
+            #receivables-summary-hero-card h2 {
+                font-size: 1.2rem !important;
+            }
+
+            .emoji-picker-grid {
+                grid-template-columns: repeat(5, 1fr) !important;
+            }
+
+            .bottom-nav-item {
+                font-size: 0.65rem !important;
+            }
+        }
+
+        /* FAB ADD TRANSACTION BUTTON IN BOTTOM NAV */
+        .fab-add-btn {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab-add-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple) 0%, #6366f1 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+            margin-bottom: 2px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .fab-add-btn:hover .fab-add-circle,
+        .fab-add-btn:active .fab-add-circle {
+            transform: scale(1.08);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.55);
+        }
+
+        /* IPHONE STYLE SWIPE-DOWN INDICATOR HANDLE */
+        .sheet-swipe-handle {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2px 0 10px 0;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .sheet-swipe-handle:active {
+            cursor: grabbing;
+        }
+
+        .sheet-swipe-pill {
+            width: 48px;
+            height: 5px;
+            background: var(--text-muted);
+            opacity: 0.45;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+        }
+
+        .sheet-swipe-handle:hover .sheet-swipe-pill,
+        .modal-box:hover .sheet-swipe-pill {
+            opacity: 0.9;
+            width: 56px;
+            background: var(--purple);
+        }
+
+        /* ULTRA-SMOOTH SPRING SLIDE-UP ANIMATION FOR TRANSACTION MODAL */
+        #transaction-modal.modal-overlay {
+            display: flex !important;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        #transaction-modal.modal-overlay .modal-box {
+            transform: translate3d(0, 100%, 0);
+            transition: transform 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.12);
+            will-change: transform;
+        }
+
+        #transaction-modal.modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #transaction-modal.modal-overlay.active .modal-box {
+            transform: translate3d(0, 0, 0);
+        }
+
+        /* WALLET DROPDOWN MENU & DROPUP FOR BOTTOM ITEMS */
+        .wallet-menu-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .wallet-dropdown {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 4px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            min-width: 140px;
+            overflow: hidden;
+            padding: 4px 0;
+        }
+
+        .wallet-dropdown button {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.15s ease;
+        }
+
+        .wallet-dropdown button:hover {
+            background-color: var(--bg);
+        }
+
+        /* Automatically open upwards (DROPUP) for the last items in list so they are never covered by bottom nav */
+        .wallet-item:last-child .wallet-dropdown,
+        .wallet-item:nth-last-child(2) .wallet-dropdown,
+        .debt-item-card:last-child .wallet-dropdown,
+        .receivable-item-card:last-child .wallet-dropdown {
+            top: auto !important;
+            bottom: 100% !important;
+            margin-top: 0 !important;
+            margin-bottom: 6px !important;
         }
 
     

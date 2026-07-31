@@ -7,20 +7,24 @@ const state = {
     ],
     transactions: JSON.parse(localStorage.getItem('keuangan_transactions28')) || [],
     customCategories: JSON.parse(localStorage.getItem('transaksiku_custom_categories')) || [],
+    savingsGoals: JSON.parse(localStorage.getItem('transaksiku_savings_goals')) || [],
+    debts: JSON.parse(localStorage.getItem('transaksiku_debts')) || [],
+    receivables: JSON.parse(localStorage.getItem('transaksiku_receivables')) || [],
     budgetSettings: JSON.parse(localStorage.getItem('transaksiku_budget_settings')) || {
         activeMode: 'envelope',
         monthlyTotal: 3600000,
         period: 'monthly',
         categoryBudgets: {
-            "Makanan & Minuman": 1500000,
-            "Transportasi": 500000,
-            "Belanja": 500000,
-            "Tagihan & Utilitas": 750000,
+            "Makanan & Minuman": 1200000,
+            "Belanja Kebutuhan": 600000,
+            "Belanja Keinginan": 400000,
+            "Transportasi": 400000,
+            "Tagihan & Utilitas": 650000,
             "Hiburan": 350000
         },
         allocations503020: { needsPercent: 50, wantsPercent: 30, savingsPercent: 20 },
-        needsCategories: ["Makanan & Minuman", "Transportasi", "Tagihan & Utilitas", "Kesehatan", "Pendidikan"],
-        wantsCategories: ["Belanja", "Hiburan", "Jalan-jalan", "Hobi"],
+        needsCategories: ["Makanan & Minuman", "Belanja Kebutuhan", "Belanja", "Transportasi", "Tagihan & Utilitas", "Kesehatan", "Pendidikan"],
+        wantsCategories: ["Belanja Keinginan", "Hiburan", "Jalan-jalan", "Hobi"],
         savingsCategories: ["Investasi", "Tabungan", "Dana Darurat"],
         rolloverEnabled: true,
         rolloverBalance: 0,
@@ -32,6 +36,48 @@ const state = {
     myComparisonChart: null,
     receivablesChart: null
 };
+
+getOrCreateCentralSavingsWallet();
+
+if (Array.isArray(state.transactions)) {
+    state.transactions.forEach(t => {
+        if (!t.mainType && t.type) {
+            t.mainType = t.type;
+        }
+        if (!t.desc && t.note) {
+            t.desc = t.note;
+        }
+        if (!t.walletName && t.walletId) {
+            const w = state.wallets.find(wal => wal.id == t.walletId);
+            if (w) t.walletName = w.name;
+        }
+        if (!t.date && t.timestamp) {
+            const d = new Date(t.timestamp);
+            t.date = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+        // Normalize category names
+        if (t.category === 'Makanan') t.category = 'Makanan & Minuman';
+        if (t.category === 'Tagihan') t.category = 'Tagihan & Utilitas';
+        if (t.category === 'Belanja') t.category = 'Belanja Kebutuhan';
+    });
+}
+
+if (state.budgetSettings) {
+    if (!state.budgetSettings.needsCategories) state.budgetSettings.needsCategories = [];
+    if (!state.budgetSettings.needsCategories.includes("Makanan & Minuman")) {
+        state.budgetSettings.needsCategories.push("Makanan & Minuman");
+    }
+    if (!state.budgetSettings.needsCategories.includes("Belanja Kebutuhan")) {
+        state.budgetSettings.needsCategories.push("Belanja Kebutuhan");
+    }
+    if (!state.budgetSettings.needsCategories.includes("Tagihan & Utilitas")) {
+        state.budgetSettings.needsCategories.push("Tagihan & Utilitas");
+    }
+    if (!state.budgetSettings.wantsCategories) state.budgetSettings.wantsCategories = [];
+    if (!state.budgetSettings.wantsCategories.includes("Belanja Keinginan")) {
+        state.budgetSettings.wantsCategories.push("Belanja Keinginan");
+    }
+}
 
 // UI Redraw Callback
 let onDataChangedCallback = null;
@@ -69,6 +115,9 @@ function saveData() {
     localStorage.setItem('keuangan_wallets28', JSON.stringify(state.wallets));
     localStorage.setItem('keuangan_transactions28', JSON.stringify(state.transactions));
     localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
+    localStorage.setItem('transaksiku_savings_goals', JSON.stringify(state.savingsGoals || []));
+    localStorage.setItem('transaksiku_debts', JSON.stringify(state.debts || []));
+    localStorage.setItem('transaksiku_receivables', JSON.stringify(state.receivables || []));
     localStorage.setItem('transaksiku_budget_settings', JSON.stringify(state.budgetSettings));
     notifyDataChanged();
     triggerCloudSync();
@@ -466,3 +515,404 @@ async function clearAllDataCloudAndLocal() {
 }
 
 window.clearAllDataCloudAndLocal = clearAllDataCloudAndLocal;
+
+// --- SAVINGS GOALS (TARGET TABUNGAN & IMPIAN) FUNCTIONS ---
+function addSavingsGoal(goalData) {
+    if (!state.savingsGoals) state.savingsGoals = [];
+    const newGoal = {
+        id: 'goal_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        name: goalData.name || 'Target Tanpa Nama',
+        targetAmount: Number(goalData.targetAmount) || 0,
+        currentAmount: Number(goalData.currentAmount) || 0,
+        targetDate: goalData.targetDate || '',
+        categoryIcon: goalData.categoryIcon || '🎯',
+        notes: goalData.notes || '',
+        history: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+    };
+    if (newGoal.currentAmount > 0) {
+        newGoal.history.push({
+            id: 'gh_' + Date.now(),
+            type: 'deposit',
+            amount: newGoal.currentAmount,
+            date: new Date().toISOString().split('T')[0],
+            note: 'Saldo awal target'
+        });
+    }
+    state.savingsGoals.push(newGoal);
+    saveData();
+    return newGoal;
+}
+
+function updateSavingsGoal(id, updatedFields) {
+    if (!state.savingsGoals) return null;
+    const index = state.savingsGoals.findIndex(g => g.id === id);
+    if (index !== -1) {
+        state.savingsGoals[index] = {
+            ...state.savingsGoals[index],
+            ...updatedFields,
+            updatedAt: Date.now()
+        };
+        saveData();
+        return state.savingsGoals[index];
+    }
+    return null;
+}
+
+function deleteSavingsGoal(id) {
+    if (!state.savingsGoals) return;
+    state.savingsGoals = state.savingsGoals.filter(g => g.id !== id);
+    saveData();
+}
+
+function getOrCreateCentralSavingsWallet() {
+    if (!Array.isArray(state.wallets)) state.wallets = [];
+    let w = state.wallets.find(wal => wal.id === 999001 || wal.name === '🐷 Tabungan Impian');
+    if (!w) {
+        w = { id: 999001, name: '🐷 Tabungan Impian', type: 'invest', balance: 0 };
+        state.wallets.push(w);
+    }
+    return w;
+}
+
+function addGoalTransaction(goalId, { type, amount, walletId, note }) {
+    if (!state.savingsGoals) return false;
+    const goal = state.savingsGoals.find(g => g.id === goalId);
+    if (!goal) return false;
+
+    const numAmount = Number(amount);
+    if (isNaN(numAmount) || numAmount <= 0) return false;
+
+    const centralSavingsWallet = getOrCreateCentralSavingsWallet();
+
+    if (type === 'deposit') {
+        goal.currentAmount = (goal.currentAmount || 0) + numAmount;
+        centralSavingsWallet.balance += numAmount;
+
+        if (walletId) {
+            const wallet = state.wallets.find(w => w.id == walletId);
+            if (wallet) {
+                wallet.balance -= numAmount;
+                state.transactions.unshift({
+                    id: Date.now(),
+                    mainType: 'transfer',
+                    type: 'transfer',
+                    amount: numAmount,
+                    category: 'Investasi / Top Up Portofolio',
+                    walletId: Number(walletId),
+                    fromId: Number(walletId),
+                    toId: centralSavingsWallet.id,
+                    walletName: `${wallet.name} ➔ ${centralSavingsWallet.name}`,
+                    date: new Date().toISOString().split('T')[0],
+                    desc: `Setoran Target Impian: ${goal.name}` + (note ? ` (${note})` : ''),
+                    note: `Setoran Target Impian: ${goal.name}` + (note ? ` (${note})` : ''),
+                    timestamp: Date.now()
+                });
+            }
+        }
+    } else if (type === 'withdraw') {
+        goal.currentAmount = Math.max(0, (goal.currentAmount || 0) - numAmount);
+        centralSavingsWallet.balance = Math.max(0, centralSavingsWallet.balance - numAmount);
+
+        if (walletId) {
+            const wallet = state.wallets.find(w => w.id == walletId);
+            if (wallet) {
+                wallet.balance += numAmount;
+                state.transactions.unshift({
+                    id: Date.now(),
+                    mainType: 'transfer',
+                    type: 'transfer',
+                    amount: numAmount,
+                    category: 'Investasi / Top Up Portofolio',
+                    walletId: Number(walletId),
+                    fromId: centralSavingsWallet.id,
+                    toId: Number(walletId),
+                    walletName: `${centralSavingsWallet.name} ➔ ${wallet.name}`,
+                    date: new Date().toISOString().split('T')[0],
+                    desc: `Penarikan Target Impian: ${goal.name}` + (note ? ` (${note})` : ''),
+                    note: `Penarikan Target Impian: ${goal.name}` + (note ? ` (${note})` : ''),
+                    timestamp: Date.now()
+                });
+            }
+        }
+    } else if (type === 'purchase') {
+        const purchaseAmt = numAmount;
+        centralSavingsWallet.balance = Math.max(0, centralSavingsWallet.balance - purchaseAmt);
+        goal.currentAmount = Math.max(0, (goal.currentAmount || 0) - purchaseAmt);
+        goal.status = 'completed';
+
+        state.transactions.unshift({
+            id: Date.now(),
+            mainType: 'expense',
+            type: 'expense',
+            amount: purchaseAmt,
+            category: 'Belanja Keinginan',
+            walletId: centralSavingsWallet.id,
+            walletName: centralSavingsWallet.name,
+            date: new Date().toISOString().split('T')[0],
+            desc: `Pembelian Barang Impian: ${goal.name}` + (note ? ` (${note})` : ''),
+            note: `Pembelian Barang Impian: ${goal.name}` + (note ? ` (${note})` : ''),
+            timestamp: Date.now()
+        });
+    }
+
+    if (!goal.history) goal.history = [];
+    goal.history.unshift({
+        id: 'gh_' + Date.now(),
+        type: type,
+        amount: numAmount,
+        walletId: walletId || null,
+        date: new Date().toISOString().split('T')[0],
+        note: note || ''
+    });
+
+    goal.updatedAt = Date.now();
+    saveData();
+    return true;
+}
+
+window.addSavingsGoal = addSavingsGoal;
+window.updateSavingsGoal = updateSavingsGoal;
+window.deleteSavingsGoal = deleteSavingsGoal;
+window.addGoalTransaction = addGoalTransaction;
+
+// --- DEBT (HUTANG) FUNCTIONS ---
+function addDebt(debtData) {
+    if (!state.debts) state.debts = [];
+    const newDebt = {
+        id: 'debt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        name: debtData.name || 'Hutang Tanpa Nama',
+        category: debtData.category || 'Pinjaman Pribadi',
+        totalAmount: Number(debtData.totalAmount) || 0,
+        paidAmount: Number(debtData.paidAmount) || 0,
+        monthlyTarget: Number(debtData.monthlyTarget) || 0,
+        dueDay: Number(debtData.dueDay) || null,
+        notes: debtData.notes || '',
+        history: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+    };
+
+    if (newDebt.paidAmount > 0) {
+        newDebt.history.push({
+            id: 'dh_' + Date.now(),
+            amount: newDebt.paidAmount,
+            date: new Date().toISOString().split('T')[0],
+            note: 'Pembayaran awal / DP'
+        });
+    }
+
+    if (debtData.walletId) {
+        const wallet = state.wallets.find(w => w.id == debtData.walletId);
+        if (wallet) {
+            wallet.balance += newDebt.totalAmount;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            state.transactions.unshift({
+                id: Date.now(),
+                timestamp: now.getTime(),
+                date: dateStr,
+                desc: `Pencairan Hutang: ${newDebt.name}`,
+                mainType: 'income',
+                category: 'Hutang & Pinjaman',
+                amount: newDebt.totalAmount,
+                walletName: wallet.name,
+                walletId: Number(debtData.walletId)
+            });
+        }
+    }
+
+    state.debts.push(newDebt);
+    saveData();
+    return newDebt;
+}
+
+function updateDebt(id, updatedFields) {
+    if (!state.debts) return null;
+    const index = state.debts.findIndex(d => d.id === id);
+    if (index !== -1) {
+        state.debts[index] = {
+            ...state.debts[index],
+            ...updatedFields,
+            updatedAt: Date.now()
+        };
+        saveData();
+        return state.debts[index];
+    }
+    return null;
+}
+
+function deleteDebt(id) {
+    if (!state.debts) return;
+    state.debts = state.debts.filter(d => d.id !== id);
+    saveData();
+}
+
+function addDebtPayment(debtId, { amount, walletId, note }) {
+    if (!state.debts) return false;
+    const debt = state.debts.find(d => d.id === debtId);
+    if (!debt) return false;
+
+    const numAmount = Number(amount);
+    if (isNaN(numAmount) || numAmount <= 0) return false;
+
+    debt.paidAmount = (debt.paidAmount || 0) + numAmount;
+
+    if (walletId) {
+        const wallet = state.wallets.find(w => w.id == walletId);
+        if (wallet) {
+            wallet.balance -= numAmount;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            state.transactions.unshift({
+                id: Date.now(),
+                timestamp: now.getTime(),
+                date: dateStr,
+                desc: `Pembayaran Cicilan: ${debt.name}` + (note ? ` (${note})` : ''),
+                mainType: 'expense',
+                category: 'Pembayaran Hutang',
+                amount: numAmount,
+                walletName: wallet.name,
+                walletId: Number(walletId)
+            });
+        }
+    }
+
+    if (!debt.history) debt.history = [];
+    debt.history.unshift({
+        id: 'dh_' + Date.now(),
+        amount: numAmount,
+        walletId: walletId || null,
+        date: new Date().toISOString().split('T')[0],
+        note: note || ''
+    });
+
+    debt.updatedAt = Date.now();
+    saveData();
+    return true;
+}
+
+// --- RECEIVABLE (PIUTANG) FUNCTIONS ---
+function addReceivable(receivableData) {
+    if (!state.receivables) state.receivables = [];
+    const newReceivable = {
+        id: 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        name: receivableData.name || 'Piutang Tanpa Nama',
+        debtorName: receivableData.debtorName || receivableData.name || 'Peminjam',
+        totalAmount: Number(receivableData.totalAmount) || 0,
+        receivedAmount: Number(receivableData.receivedAmount) || 0,
+        dueDate: receivableData.dueDate || '',
+        notes: receivableData.notes || '',
+        history: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+    };
+
+    if (newReceivable.receivedAmount > 0) {
+        newReceivable.history.push({
+            id: 'rh_' + Date.now(),
+            amount: newReceivable.receivedAmount,
+            date: new Date().toISOString().split('T')[0],
+            note: 'Pembayaran awal'
+        });
+    }
+
+    if (receivableData.walletId) {
+        const wallet = state.wallets.find(w => w.id == receivableData.walletId);
+        if (wallet) {
+            wallet.balance -= newReceivable.totalAmount;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            state.transactions.unshift({
+                id: Date.now(),
+                timestamp: now.getTime(),
+                date: dateStr,
+                desc: `Pemberian Piutang ke ${newReceivable.debtorName}: ${newReceivable.name}`,
+                mainType: 'expense',
+                category: 'Piutang & Pinjaman Diberikan',
+                amount: newReceivable.totalAmount,
+                walletName: wallet.name,
+                walletId: Number(receivableData.walletId)
+            });
+        }
+    }
+
+    state.receivables.push(newReceivable);
+    saveData();
+    return newReceivable;
+}
+
+function updateReceivable(id, updatedFields) {
+    if (!state.receivables) return null;
+    const index = state.receivables.findIndex(r => r.id === id);
+    if (index !== -1) {
+        state.receivables[index] = {
+            ...state.receivables[index],
+            ...updatedFields,
+            updatedAt: Date.now()
+        };
+        saveData();
+        return state.receivables[index];
+    }
+    return null;
+}
+
+function deleteReceivable(id) {
+    if (!state.receivables) return;
+    state.receivables = state.receivables.filter(r => r.id !== id);
+    saveData();
+}
+
+function addReceivablePayment(receivableId, { amount, walletId, note }) {
+    if (!state.receivables) return false;
+    const receivable = state.receivables.find(r => r.id === receivableId);
+    if (!receivable) return false;
+
+    const numAmount = Number(amount);
+    if (isNaN(numAmount) || numAmount <= 0) return false;
+
+    receivable.receivedAmount = (receivable.receivedAmount || 0) + numAmount;
+
+    if (walletId) {
+        const wallet = state.wallets.find(w => w.id == walletId);
+        if (wallet) {
+            wallet.balance += numAmount;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            state.transactions.unshift({
+                id: Date.now(),
+                timestamp: now.getTime(),
+                date: dateStr,
+                desc: `Penerimaan Pelunasan dari ${receivable.debtorName}: ${receivable.name}` + (note ? ` (${note})` : ''),
+                mainType: 'income',
+                category: 'Pelunasan Piutang',
+                amount: numAmount,
+                walletName: wallet.name,
+                walletId: Number(walletId)
+            });
+        }
+    }
+
+    if (!receivable.history) receivable.history = [];
+    receivable.history.unshift({
+        id: 'rh_' + Date.now(),
+        amount: numAmount,
+        walletId: walletId || null,
+        date: new Date().toISOString().split('T')[0],
+        note: note || ''
+    });
+
+    receivable.updatedAt = Date.now();
+    saveData();
+    return true;
+}
+
+window.addDebt = addDebt;
+window.updateDebt = updateDebt;
+window.deleteDebt = deleteDebt;
+window.addDebtPayment = addDebtPayment;
+window.addReceivable = addReceivable;
+window.updateReceivable = updateReceivable;
+window.deleteReceivable = deleteReceivable;
+window.addReceivablePayment = addReceivablePayment;

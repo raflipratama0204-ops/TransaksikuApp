@@ -24,7 +24,7 @@
 
     <script>
         // Force cleanup of old Service Worker caches once to resolve page freeze issues
-        if (localStorage.getItem('transaksiku_cache_cleaned_v76') !== 'true') {
+        if (localStorage.getItem('transaksiku_cache_cleaned_v77') !== 'true') {
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function (registrations) {
                     for (let registration of registrations) {
@@ -39,7 +39,7 @@
                     }
                 });
             }
-            localStorage.setItem('transaksiku_cache_cleaned_v76', 'true');
+            localStorage.setItem('transaksiku_cache_cleaned_v77', 'true');
             setTimeout(function () {
                 window.location.reload();
             }, 300);
@@ -47,7 +47,8 @@
     </script>
 
     <link rel="apple-touch-icon" href="logo.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/png" href="logo.png">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -221,13 +222,16 @@
                 <!-- Form Tambah Kategori -->
                 <div style="background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 12px; margin-bottom: 15px;">
                     <h4 style="font-size: 0.9rem; margin-bottom: 10px; color: var(--text-main); font-weight: 700;">Tambah Kategori Baru</h4>
-                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                        <input type="text" id="settings-new-cat-name" placeholder="Nama Kategori..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); font-size: 0.85rem; width: 100%; box-sizing: border-box;">
-                        <select id="settings-new-cat-type" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); font-size: 0.85rem; width: 100%; box-sizing: border-box;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <input type="text" id="settings-new-cat-name" placeholder="Nama Kategori..." style="flex: 1.2; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); font-size: 0.85rem; min-width: 130px; box-sizing: border-box;">
+                        <select id="settings-new-cat-type" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); font-size: 0.85rem; min-width: 110px; box-sizing: border-box;">
                             <option value="expense">Pengeluaran</option>
                             <option value="income">Pemasukan</option>
-                            <option value="debt">Hutang</option>
-                            <option value="receivables">Piutang</option>
+                        </select>
+                        <select id="settings-new-cat-group" style="flex: 1.2; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); font-size: 0.85rem; min-width: 140px; box-sizing: border-box;">
+                            <option value="needs">🏠 50% Needs (Kebutuhan)</option>
+                            <option value="wants" selected>🎮 30% Wants (Keinginan)</option>
+                            <option value="savings">💎 20% Savings (Tabungan)</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 10px;">
@@ -473,8 +477,8 @@
                 <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
                     💡 Sistem akan otomatis mengalokasikan:
                     <ul style="margin: 4px 0 0 16px; padding: 0;">
-                        <li><b>50% Needs (Kebutuhan)</b>: Makanan, Transportasi, Tagihan</li>
-                        <li><b>30% Wants (Keinginan)</b>: Belanja, Hiburan, Hobi</li>
+                        <li><b>50% Needs (Kebutuhan Pokok)</b>: Makanan, Belanja Kebutuhan (Sembako), Transportasi, Tagihan</li>
+                        <li><b>30% Wants (Keinginan & Lifestyle)</b>: Belanja Keinginan (Fashion/Gadget), Hiburan, Hobi</li>
                         <li><b>20% Savings (Tabungan/Investasi)</b>: Tabungan & Portofolio</li>
                     </ul>
                 </div>
@@ -537,6 +541,473 @@
             <div class="modal-actions" style="margin-top: 15px;">
                 <button onclick="closeReallocateModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
                 <button onclick="submitBudgetReallocation()" class="btn btn-primary" style="margin: 0;">Pindahkan Saldo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SAVINGS GOAL FORM MODAL (CREATE / EDIT) -->
+    <div id="savings-goal-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 480px;">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; color: var(--accent);" id="savings-goal-modal-title">
+                🎯 Buat Target Tabungan Baru
+            </h3>
+            <form id="savings-goal-form" onsubmit="event.preventDefault(); saveSavingsGoalFromForm();">
+                <input type="hidden" id="savings-goal-id" value="">
+                
+                <div class="form-group">
+                    <label>Pilih Ikon Impian:</label>
+                    <div id="savings-goal-icon-grid" class="emoji-picker-grid">
+                        <button type="button" class="emoji-btn active" onclick="selectSavingsGoalIcon('🎯', this)">🎯</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('💻', this)">💻</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('📱', this)">📱</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('🚗', this)">🚗</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('🛵', this)">🛵</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('🏠', this)">🏠</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('🏖️', this)">🏖️</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('🛡️', this)">🛡️</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('🎓', this)">🎓</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('💍', this)">💍</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('✈️', this)">✈️</button>
+                        <button type="button" class="emoji-btn" onclick="selectSavingsGoalIcon('✨', this)">✨</button>
+                    </div>
+                    <input type="hidden" id="savings-goal-icon" value="🎯">
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Target / Impian:</label>
+                    <input type="text" id="savings-goal-name" placeholder="Contoh: Beli Laptop, Dana Darurat, Liburan" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Target Nominal Uang (Rp):</label>
+                    <input type="text" id="savings-goal-target-amount" placeholder="0" oninput="formatCurrencyInput(this); calculateGoalPacingPreview();" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Tenggat Waktu / Tanggal Target:</label>
+                    <input type="date" id="savings-goal-target-date" onchange="calculateGoalPacingPreview();" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Setoran Awal (Opsional - Rp):</label>
+                    <input type="text" id="savings-goal-initial-amount" placeholder="0" oninput="formatCurrencyInput(this); calculateGoalPacingPreview();">
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan / Alasan (Opsional):</label>
+                    <input type="text" id="savings-goal-notes" placeholder="Catatan singkat tentang impian Anda">
+                </div>
+
+                <!-- Preview Pacing Recommendation -->
+                <div id="savings-goal-pacing-preview" style="background: rgba(139, 92, 246, 0.1); border: 1px dashed var(--purple); padding: 12px; border-radius: 10px; margin-top: 10px; font-size: 0.82rem; color: var(--text-main); display: none;">
+                    💡 <strong>Rekomendasi Menabung:</strong> <span id="pacing-preview-text">-</span>
+                </div>
+
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" onclick="closeSavingsGoalModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="margin: 0;">Simpan Target</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SAVINGS GOAL DEPOSIT / WITHDRAW MODAL -->
+    <div id="savings-goal-deposit-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 440px;">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; color: var(--accent);" id="goal-deposit-modal-title">
+                💰 Tambah Setoran Tabungan
+            </h3>
+            <form id="savings-goal-deposit-form" onsubmit="event.preventDefault(); submitGoalDepositForm();">
+                <input type="hidden" id="deposit-goal-id" value="">
+                <input type="hidden" id="deposit-goal-type" value="deposit">
+
+                <!-- Goal Summary Info -->
+                <div id="deposit-goal-info-card" style="background: var(--bg); padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                    <span id="deposit-goal-icon" style="font-size: 1.8rem;">🎯</span>
+                    <div>
+                        <strong id="deposit-goal-name" style="font-size: 0.95rem; display: block; color: var(--text-main);">Target</strong>
+                        <span id="deposit-goal-progress-text" style="font-size: 0.8rem; color: var(--text-muted);">Rp 0 terkumpul</span>
+                    </div>
+                </div>
+
+                <!-- Action Type Switch (Setor vs Tarik) -->
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <button type="button" id="btn-goal-type-deposit" onclick="setGoalDepositType('deposit')" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: var(--success); color: white; cursor: pointer;">
+                        📥 Setor (Menabung)
+                    </button>
+                    <button type="button" id="btn-goal-type-withdraw" onclick="setGoalDepositType('withdraw')" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: var(--border); color: var(--text-muted); cursor: pointer;">
+                        📤 Tarik Saldo
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label id="deposit-wallet-label">Pilih Dompet Sumber Setoran:</label>
+                    <select id="deposit-wallet-id" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nominal (Rp):</label>
+                    <input type="text" id="deposit-amount" placeholder="0" oninput="formatCurrencyInput(this)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan (Opsional):</label>
+                    <input type="text" id="deposit-note" placeholder="Misal: Gaji bulan ini, Bonus, dsb.">
+                </div>
+
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" onclick="closeGoalDepositModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                    <button type="submit" id="btn-submit-goal-deposit" class="btn btn-primary" style="margin: 0;">Proses Setoran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SAVINGS GOAL DETAIL & HISTORY MODAL -->
+    <div id="savings-goal-detail-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: var(--accent); display: flex; align-items: center; gap: 8px;">
+                    <span id="detail-goal-icon">🎯</span>
+                    <span id="detail-goal-title">Detail Target</span>
+                </h3>
+                <button onclick="closeGoalDetailModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+
+            <!-- Detail Cards -->
+            <div id="detail-goal-summary-container"></div>
+
+            <h4 style="margin: 15px 0 10px 0; font-size: 0.9rem; color: var(--text-main); display: flex; justify-content: space-between; align-items: center;">
+                <span>📜 Riwayat Setoran & Penarikan</span>
+            </h4>
+            <div id="detail-goal-history-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: var(--bg);">
+                <!-- Dinamis via JS -->
+            </div>
+
+            <div class="modal-actions" style="margin-top: 15px; justify-content: space-between;">
+                <button type="button" id="btn-delete-goal" onclick="handleDeleteGoalClick()" style="background: var(--danger); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer;">🗑️ Hapus Target</button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" id="btn-edit-goal" onclick="handleEditGoalClick()" style="background: var(--border); color: var(--text-main); border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer;">✏️ Edit</button>
+                    <button type="button" onclick="closeGoalDetailModal()" class="btn btn-primary" style="margin: 0;">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DEBT FORM MODAL (CREATE / EDIT) -->
+    <div id="debt-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 480px;">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; color: var(--purple);" id="debt-modal-title">
+                💳 Tambah Catatan Hutang Baru
+            </h3>
+            <form id="debt-form" onsubmit="event.preventDefault(); saveDebtFromForm();">
+                <input type="hidden" id="debt-id" value="">
+
+                <div class="form-group">
+                    <label>Nama Hutang / Kreditur:</label>
+                    <input type="text" id="debt-name" placeholder="Contoh: KPR Rumah, Kartu Kredit BCA, Pinjaman Budi" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Kategori Pinjaman:</label>
+                    <select id="debt-category" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);">
+                        <option value="Pinjaman Bank">🏛️ Pinjaman Bank</option>
+                        <option value="Kartu Kredit">💳 Kartu Kredit</option>
+                        <option value="Pinjaman Pribadi">👤 Pinjaman Pribadi / Teman</option>
+                        <option value="KPR / Kendaraan">🏠 KPR / Kredit Kendaraan</option>
+                        <option value="Paylater / Pinjol">📱 Paylater / Pinjol</option>
+                        <option value="Lainnya">📌 Lainnya</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Total Nominal Pinjaman (Rp):</label>
+                    <input type="text" id="debt-total-amount" placeholder="0" oninput="formatCurrencyInput(this)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Target Cicilan Per Bulan (Opsional - Rp):</label>
+                    <input type="text" id="debt-monthly-target" placeholder="0" oninput="formatCurrencyInput(this)">
+                </div>
+
+                <div class="form-group">
+                    <label>Tanggal Jatuh Tempo Setiap Bulan (Opsional):</label>
+                    <select id="debt-due-day" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);">
+                        <option value="">-- Tanpa Tanggal Tetap --</option>
+                        <option value="1">Tanggal 1</option><option value="5">Tanggal 5</option><option value="10">Tanggal 10</option>
+                        <option value="15">Tanggal 15</option><option value="20">Tanggal 20</option><option value="25">Tanggal 25</option>
+                        <option value="28">Tanggal 28</option><option value="30">Tanggal 30</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Pilih Dompet Tujuan (Jika Uang Masuk Kas):</label>
+                    <select id="debt-wallet-id" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan (Opsional):</label>
+                    <input type="text" id="debt-notes" placeholder="Catatan atau nomor kontrak">
+                </div>
+
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" onclick="closeDebtModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="margin: 0; background: var(--purple);">Simpan Hutang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DEBT PAYMENT MODAL -->
+    <div id="debt-payment-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 440px;">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; color: var(--purple);">
+                💳 Bayar Cicilan / Pelunasan Hutang
+            </h3>
+            <form id="debt-payment-form" onsubmit="event.preventDefault(); submitDebtPaymentForm();">
+                <input type="hidden" id="payment-debt-id" value="">
+
+                <div id="payment-debt-info-card" style="background: var(--bg); padding: 10px 14px; border-radius: 10px; margin-bottom: 12px;">
+                    <strong id="payment-debt-name" style="font-size: 0.95rem; display: block; color: var(--text-main);">Hutang</strong>
+                    <span id="payment-debt-progress-text" style="font-size: 0.8rem; color: var(--text-muted);">Sisa kewajiban: Rp 0</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Pilih Dompet Sumber Pembayaran (Dipotong):</label>
+                    <select id="payment-debt-wallet-id" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nominal Pembayaran (Rp):</label>
+                    <input type="text" id="payment-debt-amount" placeholder="0" oninput="formatCurrencyInput(this)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan (Opsional):</label>
+                    <input type="text" id="payment-debt-note" placeholder="Misal: Cicilan Bulan Agustus">
+                </div>
+
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" onclick="closeDebtPaymentModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="margin: 0; background: var(--purple);">Proses Pembayaran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DEBT DETAIL & HISTORY MODAL -->
+    <div id="debt-detail-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: var(--purple); display: flex; align-items: center; gap: 8px;">
+                    <span>💳 Detail & Riwayat Hutang</span>
+                </h3>
+                <button onclick="closeDebtDetailModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+
+            <div id="detail-debt-summary-container"></div>
+
+            <h4 style="margin: 15px 0 10px 0; font-size: 0.9rem; color: var(--text-main);">📜 Riwayat Pembayaran Cicilan</h4>
+            <div id="detail-debt-history-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: var(--bg);"></div>
+
+            <div class="modal-actions" style="margin-top: 15px; justify-content: space-between;">
+                <button type="button" onclick="handleDeleteDebtClick()" style="background: var(--danger); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer;">🗑️ Hapus Catatan</button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="handleEditDebtClick()" style="background: var(--border); color: var(--text-main); border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer;">✏️ Edit</button>
+                    <button type="button" onclick="closeDebtDetailModal()" class="btn btn-primary" style="margin: 0;">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECEIVABLE FORM MODAL (CREATE / EDIT) -->
+    <div id="receivable-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 480px;">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; color: var(--success);" id="receivable-modal-title">
+                🤝 Tambah Catatan Piutang Baru
+            </h3>
+            <form id="receivable-form" onsubmit="event.preventDefault(); saveReceivableFromForm();">
+                <input type="hidden" id="receivable-id" value="">
+
+                <div class="form-group">
+                    <label>Nama Tagihan / Keterangan Piutang:</label>
+                    <input type="text" id="receivable-name" placeholder="Contoh: Pinjaman Budi, Tagihan Proyek A" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Peminjam / Debitur:</label>
+                    <input type="text" id="receivable-debtor-name" placeholder="Nama orang / pihak yang meminjam" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Total Uang yang Dipinjamkan (Rp):</label>
+                    <input type="text" id="receivable-total-amount" placeholder="0" oninput="formatCurrencyInput(this)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Tanggal Tenggat Pengembalian (Janji Bayar):</label>
+                    <input type="date" id="receivable-due-date">
+                </div>
+
+                <div class="form-group">
+                    <label>Pilih Dompet Sumber (Jika Uang Keluar dari Kas):</label>
+                    <select id="receivable-wallet-id" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan (Opsional):</label>
+                    <input type="text" id="receivable-notes" placeholder="Catatan tambahan">
+                </div>
+
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" onclick="closeReceivableModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="margin: 0; background: var(--success);">Simpan Piutang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RECEIVABLE PAYMENT MODAL -->
+    <div id="receivable-payment-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 440px;">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; color: var(--success);">
+                💰 Terima Pelunasan Piutang
+            </h3>
+            <form id="receivable-payment-form" onsubmit="event.preventDefault(); submitReceivablePaymentForm();">
+                <input type="hidden" id="payment-receivable-id" value="">
+
+                <div id="payment-receivable-info-card" style="background: var(--bg); padding: 10px 14px; border-radius: 10px; margin-bottom: 12px;">
+                    <strong id="payment-receivable-name" style="font-size: 0.95rem; display: block; color: var(--text-main);">Piutang</strong>
+                    <span id="payment-receivable-progress-text" style="font-size: 0.8rem; color: var(--text-muted);">Sisa tagihan: Rp 0</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Pilih Dompet Tujuan Penerimaan (Ditambah):</label>
+                    <select id="payment-receivable-wallet-id" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nominal Diterima (Rp):</label>
+                    <input type="text" id="payment-receivable-amount" placeholder="0" oninput="formatCurrencyInput(this)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan (Opsional):</label>
+                    <input type="text" id="payment-receivable-note" placeholder="Misal: Cicilan ke-1">
+                </div>
+
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" onclick="closeReceivablePaymentModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="margin: 0; background: var(--success);">Proses Penerimaan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RECEIVABLE DETAIL & HISTORY MODAL -->
+    <div id="receivable-detail-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: var(--success); display: flex; align-items: center; gap: 8px;">
+                    <span>🤝 Detail & Riwayat Piutang</span>
+                </h3>
+                <button onclick="closeReceivableDetailModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+
+            <div id="detail-receivable-summary-container"></div>
+
+            <h4 style="margin: 15px 0 10px 0; font-size: 0.9rem; color: var(--text-main);">📜 Riwayat Penerimaan Pelunasan</h4>
+            <div id="detail-receivable-history-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: var(--bg);"></div>
+
+            <div class="modal-actions" style="margin-top: 15px; justify-content: space-between;">
+                <button type="button" onclick="handleDeleteReceivableClick()" style="background: var(--danger); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer;">🗑️ Hapus Catatan</button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="handleEditReceivableClick()" style="background: var(--border); color: var(--text-main); border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer;">✏️ Edit</button>
+                    <button type="button" onclick="closeReceivableDetailModal()" class="btn btn-primary" style="margin: 0;">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW TRANSACTION INPUT MODAL (SWIPE-UP BOTTOM SHEET) -->
+    <div id="transaction-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 520px;">
+            <!-- IPHONE STYLE SWIPE HANDLE INDICATOR -->
+            <div class="sheet-swipe-handle" title="Usap ke bawah untuk menutup modal">
+                <div class="sheet-swipe-pill"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: var(--purple); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>✍️ Catat Transaksi Baru</span>
+                </h3>
+                <button onclick="closeTransactionModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label>Jenis Transaksi</label>
+                <select id="trans-main-type" onchange="updateCategoryOptions()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); font-size: 0.88rem;">
+                    <option value="expense" selected>💸 Pengeluaran Harian</option>
+                    <option value="income">💰 Pemasukan Kas</option>
+                    <option value="transfer">🔄 Pindah Uang / Transfer</option>
+                </select>
+            </div>
+
+            <div id="trans-fields-container">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 140px;">
+                        <label>Tanggal Transaksi</label>
+                        <input type="date" id="trans-date">
+                    </div>
+
+                    <div class="form-group" style="flex: 1; min-width: 140px;">
+                        <label>Kategori</label>
+                        <select id="trans-category" onchange="toggleTransferFields()"></select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Keterangan Transaksi</label>
+                    <input type="text" id="trans-desc" placeholder="Contoh: Makan siang, Gaji, Belanja Sembako...">
+                </div>
+
+                <div class="form-group">
+                    <label>Nominal (Rp)</label>
+                    <input type="text" id="trans-amount" placeholder="0" oninput="formatCurrencyInput(this)">
+                </div>
+
+                <div id="debt-cashflow-toggle-field" class="form-group" style="display: none;">
+                    <label>Adakah Aliran Uang Masuk/Keluar Ke Dompet?</label>
+                    <select id="trans-debt-cashflow" onchange="toggleTransferFields()">
+                        <option value="ya">Ya (Uang mengalir langsung ke/dari dompet)</option>
+                        <option value="tidak" selected>Tidak (Tidak ada kas masuk/keluar)</option>
+                    </select>
+                </div>
+
+                <div id="debt-due-day-field" class="form-group" style="display: none;">
+                    <label>Jadwal Pembayaran (Tanggal 1-31, Opsional)</label>
+                    <input type="number" id="trans-debt-due-day" min="1" max="31" placeholder="Misal: 10">
+                </div>
+
+                <div id="single-wallet-field" class="form-group">
+                    <label id="wallet-field-label">Gunakan Uang Dari Dompet Mana?</label>
+                    <select id="trans-wallet"></select>
+                </div>
+
+                <div id="transfer-fields" style="display: none;">
+                    <div class="form-group">
+                        <label>Kirim Dari Dompet</label>
+                        <select id="trans-from"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Simpan Ke Dompet</label>
+                        <select id="trans-to"></select>
+                    </div>
+                </div>
+
+                <div class="modal-actions" style="margin-top: 20px;">
+                    <button type="button" onclick="closeTransactionModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
+                    <button type="button" onclick="addTransaction()" class="btn btn-primary" style="margin: 0; background: linear-gradient(135deg, var(--purple) 0%, #6366f1 100%);">Simpan Transaksi</button>
+                </div>
             </div>
         </div>
     </div>
@@ -641,7 +1112,7 @@
                     <h2 id="sum-cash">Rp 0</h2>
                 </div>
                 <div class="summary-card invest" id="card-total-portfolio">
-                    <p>Total Portofolio Investasi</p>
+                    <p>Total Tabungan & Investasi</p>
                     <h2 id="sum-portfolio">Rp 0</h2>
                 </div>
             </div>
@@ -662,112 +1133,33 @@
                 </div>
             </div>
 
-            <div class="split-grid" style="margin-top: 10px;">
-                <div class="wallet-panel">
-                    <div class="card">
-                        <h3>Daftar Akun / Dompet</h3>
-                        <div id="wallet-list"></div>
-
-                        <div style="margin-top: 10px;">
-                            <button onclick="toggleAddWalletForm()" class="btn btn-outline">+ Tambah Akun Baru</button>
-
-                            <div id="add-wallet-container">
-                                <div class="flex-row">
-                                    <div class="form-group" style="flex: 1.5; margin-bottom: 0;">
-                                        <label style="font-size: 0.8rem;">Nama Akun</label>
-                                        <input type="text" id="new-wallet-name" placeholder="Misal: OVO">
-                                    </div>
-                                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                                        <label style="font-size: 0.8rem;">Jenis</label>
-                                        <select id="new-wallet-type">
-                                            <option value="cash">Kas / Bank</option>
-                                            <option value="invest">Investasi</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-top: 10px; margin-bottom: 10px;">
-                                    <label style="font-size: 0.8rem;">Saldo Awal (Opsional)</label>
-                                    <input type="text" id="new-wallet-balance" placeholder="0" oninput="formatCurrencyInput(this)">
-                                </div>
-                                <button onclick="addWallet()" class="btn btn-primary" style="margin-top: 5px;">Simpan Akun</button>
-                            </div>
-                        </div>
-                    </div>
+            <!-- WALLET LIST & ACCOUNTS PANEL -->
+            <div class="card" style="margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Daftar Akun & Dompet</h3>
+                    <button onclick="toggleAddWalletForm()" class="btn btn-outline" style="width: 32px; height: 32px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800; border-color: var(--accent); color: var(--accent);" title="+ Tambah Dompet Baru">➕</button>
                 </div>
+                <div id="wallet-list"></div>
 
-                <div class="form-panel">
-                    <div class="card">
-                        <h3>Catat Transaksi Baru</h3>
-
-                        <div class="form-group">
-                            <label>Jenis Transaksi</label>
-                            <select id="trans-main-type" onchange="updateCategoryOptions()">
-                                <option value="expense" selected>Pengeluaran</option>
-                                <option value="income">Pemasukan</option>
-                                <option value="debt" style="color: var(--purple); font-weight: bold;">Ambil Hutang</option>
-                                <option value="receivables" style="color: var(--success); font-weight: bold;">Beri Pinjaman / Piutang</option>
-                                <option value="transfer">Pindah Uang</option>
+                <div id="add-wallet-container" style="display: none; margin-top: 10px; padding: 10px 12px; background: var(--bg); border-radius: 10px; border: 1px solid var(--border);">
+                    <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1.8; min-width: 110px;">
+                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Nama Akun</label>
+                            <input type="text" id="new-wallet-name" placeholder="Misal: BCA, OVO" style="padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%; box-sizing: border-border;">
+                        </div>
+                        <div style="flex: 1.2; min-width: 90px;">
+                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Jenis</label>
+                            <select id="new-wallet-type" style="padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%;">
+                                <option value="cash">Kas / Bank</option>
+                                <option value="invest">Investasi</option>
                             </select>
                         </div>
-
-                        <!-- FIELDS CONTAINER VISIBLE BY DEFAULT -->
-                        <div id="trans-fields-container">
-                            <div class="flex-row">
-                                <div class="form-group" style="flex: 1;">
-                                    <label>Tanggal Transaksi</label>
-                                    <input type="date" id="trans-date">
-                                </div>
-
-                                <div class="form-group" style="flex: 1;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                                        <label style="margin: 0;">Kategori</label>
-                                    </div>
-                                    <select id="trans-category" onchange="toggleTransferFields()"></select>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Keterangan Transaksi</label>
-                                <input type="text" id="trans-desc" placeholder="Contoh: Makan siang, Gaji, Beli Reksa Dana...">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Nominal</label>
-                                <input type="text" id="trans-amount" placeholder="0" oninput="formatCurrencyInput(this)">
-                            </div>
-
-                            <!-- FIELD PILIHAN ALIRAN KAS UNTUK HUTANG & PIUTANG -->
-                            <div id="debt-cashflow-toggle-field" class="form-group" style="display: none;">
-                                <label>Adakah Aliran Uang Masuk/Keluar Ke Dompet?</label>
-                                <select id="trans-debt-cashflow" onchange="toggleTransferFields()">
-                                    <option value="ya">Ya (Uang mengalir langsung ke/dari dompet fisik/rekening bank)</option>
-                                    <option value="tidak" selected>Tidak (Tidak ada kas masuk/keluar langsung ke dompet)</option>
-                                </select>
-                            </div>
-
-                            <!-- FIELD JADWAL CICILAN HUTANG & PIUTANG -->
-                            <div id="debt-due-day-field" class="form-group" style="display: none;">
-                                <label>Jadwal Pembayaran/Penagihan (Tanggal 1-31, Opsional)</label>
-                                <input type="number" id="trans-debt-due-day" min="1" max="31" placeholder="Misal: 10 (Setiap tanggal 10)">
-                            </div>
-
-                            <div id="single-wallet-field" class="form-group">
-                                <label id="wallet-field-label">Gunakan Uang Dari Dompet Mana?</label>
-                                <select id="trans-wallet"></select>
-                            </div>
-
-                            <div id="transfer-fields" style="display: none;">
-                                <div class="form-group">
-                                    <label>Kirim Dari Dompet</label>
-                                    <select id="trans-from"></select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Simpan Ke Dompet</label>
-                                    <select id="trans-to"></select>
-                                </div>
-                            </div>
-
-                            <button onclick="addTransaction()" class="btn btn-primary" style="margin-top: 15px;">Simpan Transaksi</button>
+                        <div style="flex: 1.4; min-width: 100px;">
+                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Saldo Awal</label>
+                            <input type="text" id="new-wallet-balance" placeholder="0" oninput="formatCurrencyInput(this)" style="padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%; box-sizing: border-border;">
+                        </div>
+                        <div style="flex: 0.8; min-width: 70px;">
+                            <button onclick="addWallet()" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.78rem; border-radius: 6px; width: 100%; font-weight: 700; height: 32px; display: flex; align-items: center; justify-content: center;">Simpan</button>
                         </div>
                     </div>
                 </div>
@@ -858,89 +1250,54 @@
             </div>
         </div>
 
-        <!-- VIEW 4: LAPORAN HUTANG -->
+        <!-- VIEW 4: MANAGEMENT & LAPORAN HUTANG -->
         <div id="view-debt" class="app-view" style="display: none;">
-            <div class="header-title">
-                <h1>Laporan Hutang Aktif</h1>
-                <p style="color: var(--text-muted);">Analisis rincian dan distribusi kewajiban/hutang aktif Anda.</p>
+            <div class="header-title-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <div class="header-title" style="margin-bottom: 0;">
+                    <h1>Manajemen & Pelunasan Hutang</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Kelola kewajiban hutang, cicilan bulanan, dan jadwal jatuh tempo secara teratur.</p>
+                </div>
+                <button onclick="openDebtModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px; background: var(--purple);">
+                    ➕ Tambah Hutang Baru
+                </button>
             </div>
 
-            <!-- DEBT ANALYSIS CARD -->
-            <div class="card" style="margin-top: 15px; margin-bottom: 25px; border: 1px solid var(--purple); background: var(--card);">
-                <h4 style="margin-bottom: 15px; color: var(--purple); border-bottom: 2px solid var(--purple); padding-bottom: 5px; text-align: center;">
-                    Analisis & Distribusi Hutang Aktif
-                </h4>
-                <div class="split-grid" style="align-items: center; gap: 20px;">
-                    <div class="chart-container" style="max-height: 200px; position: relative; flex: 1;">
-                        <canvas id="debtChart"></canvas>
-                    </div>
-                    <div id="debt-breakdown-list" style="display: flex; flex-direction: column; gap: 12px; flex: 1.2;">
-                        <!-- Dinamis via JS -->
-                    </div>
-                </div>
+            <!-- DEBT SUMMARY HERO CARD -->
+            <div id="debt-summary-hero-card" class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%); border: 1px solid rgba(168, 85, 247, 0.3);">
+                <!-- Dinamis via renderDebtView() -->
             </div>
 
-            <!-- STATUS PEMBAYARAN BULAN INI -->
-            <div id="debt-monthly-status-card" class="card" style="margin-top: 15px; margin-bottom: 20px; border: 1px solid var(--accent); background: var(--card);">
-                <h4 style="margin-bottom: 15px; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 8px; text-align: center; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                    <span>Status Pembayaran Bulan Ini</span>
-                </h4>
-                <div id="debt-monthly-status-list" style="display: flex; flex-direction: column; gap: 12px;">
-                    <!-- Dinamis via JS -->
-                </div>
+            <!-- MONTHLY DUE ALERT BANNER -->
+            <div id="debt-due-alert-banner" style="margin-bottom: 20px;">
+                <!-- Dinamis via renderDebtView() -->
             </div>
 
-            <!-- RIWAYAT PEMBAYARAN HUTANG -->
-            <div class="card" style="margin-top: 15px; margin-bottom: 25px; border: 1px solid var(--purple); background: var(--card);">
-                <h4 style="margin-bottom: 15px; color: var(--purple); border-bottom: 2px solid var(--purple); padding-bottom: 8px; text-align: center; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                    <span>Riwayat Pembayaran Hutang</span>
-                </h4>
-                <div id="debt-payment-history-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
-                    <!-- Dinamis via JS -->
-                </div>
+            <!-- DEBT CARDS GRID -->
+            <div id="debt-cards-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px;">
+                <!-- Dinamis via renderDebtView() -->
             </div>
         </div>
 
-        <!-- VIEW 5: LAPORAN PIUTANG -->
+        <!-- VIEW 5: MANAGEMENT & LAPORAN PIUTANG -->
         <div id="view-receivables" class="app-view" style="display: none;">
-            <div class="header-title">
-                <h1>Laporan Piutang Aktif</h1>
-                <p style="color: var(--text-muted);">Analisis rincian dan pelunasan piutang (uang Anda yang dipinjam orang lain).</p>
+            <div class="header-title-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <div class="header-title" style="margin-bottom: 0;">
+                    <h1>Manajemen & Pelunasan Piutang</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Pantau uang Anda yang dipinjam orang lain dan riwayat pelunasannya.</p>
+                </div>
+                <button onclick="openReceivableModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px; background: var(--success);">
+                    ➕ Tambah Piutang Baru
+                </button>
             </div>
 
-            <!-- RECEIVABLES ANALYSIS CARD -->
-            <div class="card" style="margin-top: 15px; margin-bottom: 25px; border: 1px solid var(--success); background: var(--card);">
-                <h4 style="margin-bottom: 15px; color: var(--success); border-bottom: 2px solid var(--success); padding-bottom: 5px; text-align: center;">
-                    Analisis & Distribusi Piutang Aktif
-                </h4>
-                <div class="split-grid" style="align-items: center; gap: 20px;">
-                    <div class="chart-container" style="max-height: 200px; position: relative; flex: 1;">
-                        <canvas id="receivablesChart"></canvas>
-                    </div>
-                    <div id="receivables-breakdown-list" style="display: flex; flex-direction: column; gap: 12px; flex: 1.2;">
-                        <!-- Dinamis via JS -->
-                    </div>
-                </div>
+            <!-- RECEIVABLES SUMMARY HERO CARD -->
+            <div id="receivables-summary-hero-card" class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(52, 211, 153, 0.1) 100%); border: 1px solid rgba(16, 185, 129, 0.3);">
+                <!-- Dinamis via renderReceivablesView() -->
             </div>
 
-            <!-- STATUS PELUNASAN BULAN INI -->
-            <div id="receivables-monthly-status-card" class="card" style="margin-top: 15px; margin-bottom: 20px; border: 1px solid var(--accent); background: var(--card);">
-                <h4 style="margin-bottom: 15px; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 8px; text-align: center; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                    <span>Status Pelunasan Bulan Ini</span>
-                </h4>
-                <div id="receivables-monthly-status-list" style="display: flex; flex-direction: column; gap: 12px;">
-                    <!-- Dinamis via JS -->
-                </div>
-            </div>
-
-            <!-- RIWAYAT PELUNASAN PIUTANG -->
-            <div class="card" style="margin-top: 15px; margin-bottom: 25px; border: 1px solid var(--success); background: var(--card);">
-                <h4 style="margin-bottom: 15px; color: var(--success); border-bottom: 2px solid var(--success); padding-bottom: 8px; text-align: center; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                    <span>Riwayat Penerimaan Pelunasan Piutang</span>
-                </h4>
-                <div id="receivables-payment-history-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
-                    <!-- Dinamis via JS -->
-                </div>
+            <!-- RECEIVABLES CARDS GRID -->
+            <div id="receivables-cards-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px;">
+                <!-- Dinamis via renderReceivablesView() -->
             </div>
         </div>
 
@@ -948,76 +1305,107 @@
         <div id="view-budget" class="app-view">
             <div class="header-title-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
                 <div class="header-title" style="margin-bottom: 0;">
-                    <h1>Manajemen & Batas Anggaran</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Kendalikan pengeluaran bulanan Anda secara proaktif & disiplin.</p>
+                    <h1 id="budget-main-title">Manajemen & Batas Anggaran</h1>
+                    <p id="budget-main-desc" style="color: var(--text-muted); font-size: 0.9rem;">Kendalikan pengeluaran bulanan Anda secara proaktif & disiplin.</p>
                 </div>
-                <button onclick="openBudgetSetupModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px;">
-                    ⚙️ Atur Anggaran
-                </button>
-            </div>
-
-            <!-- Mode Selector Chips -->
-            <div class="budget-mode-selector">
-                <button class="budget-mode-chip active" id="chip-mode-envelope" onclick="switchBudgetMode('envelope')">
-                    ✉️ Envelope System
-                </button>
-                <button class="budget-mode-chip" id="chip-mode-503020" onclick="switchBudgetMode('50_30_20')">
-                    📊 Metode 50/30/20
-                </button>
-                <button class="budget-mode-chip" id="chip-mode-custom" onclick="switchBudgetMode('custom')">
-                    🎯 Custom Budget
-                </button>
-            </div>
-
-            <!-- Hero Pacing Card -->
-            <div class="budget-hero-card">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-                    <div>
-                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TOTAL ANGGARAN BULAN INI</span>
-                        <h2 id="budget-hero-total" style="font-size: 1.6rem; color: var(--text-main); margin-top: 2px;">Rp 0</h2>
-                    </div>
-                    <div id="budget-pacing-badge-container">
-                        <span class="budget-pacing-badge safe" id="budget-pacing-badge">🟢 Aman</span>
-                    </div>
-                </div>
-
-                <!-- Progress Track -->
-                <div class="budget-progress-track">
-                    <div class="budget-progress-bar-fill safe" id="budget-hero-progress-fill" style="width: 0%;"></div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: 15px;">
-                    <span id="budget-hero-spent-text" style="color: var(--text-muted);">Terpakai: Rp 0 (0%)</span>
-                    <span id="budget-hero-remaining-text" style="color: var(--accent);">Sisa: Rp 0</span>
-                </div>
-
-                <!-- Pacing & Daily Limit Cards -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
-                    <div style="background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">⚡ Kecepatan Belanja (Pacing)</span>
-                        <span id="budget-pacing-status-text" style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">Normal (Sesuai Target)</span>
-                        <p id="budget-pacing-desc" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; line-height: 1.2;">Pengeluaran berjalan seimbang dengan sisa hari bulan ini.</p>
-                    </div>
-                    <div style="background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">📅 Batas Belanja Harian Aman</span>
-                        <span id="budget-daily-limit-text" style="font-size: 1.1rem; font-weight: 800; color: var(--success);">Rp 0 / hari</span>
-                        <p id="budget-daily-days-left" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; line-height: 1.2;">Berdasarkan sisa hari pada periode ini.</p>
-                    </div>
+                <div id="budget-action-btns">
+                    <button id="btn-open-budget-setup" onclick="openBudgetSetupModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px;">
+                        ⚙️ Atur Anggaran
+                    </button>
+                    <button id="btn-open-savings-modal" onclick="openSavingsGoalModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px; display: none;">
+                        ➕ Target Tabungan Baru
+                    </button>
                 </div>
             </div>
 
-            <!-- Dynamic Mode Content Area -->
-            <div id="budget-mode-content">
-                <!-- Dinamis via renderBudgetView() -->
+            <!-- Main Tab Switcher: Pengeluaran vs Target Tabungan -->
+            <div class="budget-main-tab-switcher" style="display: flex; gap: 8px; margin-bottom: 20px; background: var(--card); padding: 6px; border-radius: 12px; border: 1px solid var(--border);">
+                <button id="btn-budget-tab-expenses" class="budget-tab-btn active" onclick="switchBudgetSection('expenses')" style="flex: 1; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; background: var(--accent); color: white;">
+                    💸 Anggaran Pengeluaran
+                </button>
+                <button id="btn-budget-tab-savings" class="budget-tab-btn" onclick="switchBudgetSection('savings')" style="flex: 1; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--text-muted);">
+                    🎯 Target Tabungan & Impian
+                </button>
             </div>
 
-            <!-- Gamification & Monthly Insights Card -->
-            <div class="card" style="margin-top: 20px; border: 1px solid var(--purple); background: var(--card);">
-                <h4 style="margin-bottom: 12px; color: var(--purple); border-bottom: 2px solid var(--purple); padding-bottom: 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-                    <span>🏆 Insights Disiplin & Gamifikasi</span>
-                </h4>
-                <div id="budget-gamification-content">
-                    <!-- Dinamis via JS -->
+            <!-- SECTION 1: SPENDING BUDGET -->
+            <div id="budget-section-expenses">
+                <!-- Mode Selector Chips -->
+                <div class="budget-mode-selector">
+                    <button class="budget-mode-chip active" id="chip-mode-envelope" onclick="switchBudgetMode('envelope')">
+                        ✉️ Envelope System
+                    </button>
+                    <button class="budget-mode-chip" id="chip-mode-503020" onclick="switchBudgetMode('50_30_20')">
+                        📊 Metode 50/30/20
+                    </button>
+                    <button class="budget-mode-chip" id="chip-mode-custom" onclick="switchBudgetMode('custom')">
+                        🎯 Custom Budget
+                    </button>
+                </div>
+
+                <!-- Hero Pacing Card -->
+                <div class="budget-hero-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TOTAL ANGGARAN BULAN INI</span>
+                            <h2 id="budget-hero-total" style="font-size: 1.6rem; color: var(--text-main); margin-top: 2px;">Rp 0</h2>
+                        </div>
+                        <div id="budget-pacing-badge-container">
+                            <span class="budget-pacing-badge safe" id="budget-pacing-badge">🟢 Aman</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Track -->
+                    <div class="budget-progress-track">
+                        <div class="budget-progress-bar-fill safe" id="budget-hero-progress-fill" style="width: 0%;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: 15px;">
+                        <span id="budget-hero-spent-text" style="color: var(--text-muted);">Terpakai: Rp 0 (0%)</span>
+                        <span id="budget-hero-remaining-text" style="color: var(--accent);">Sisa: Rp 0</span>
+                    </div>
+
+                    <!-- Pacing & Daily Limit Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                        <div style="background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">⚡ Kecepatan Belanja (Pacing)</span>
+                            <span id="budget-pacing-status-text" style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">Normal (Sesuai Target)</span>
+                            <p id="budget-pacing-desc" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; line-height: 1.2;">Pengeluaran berjalan seimbang dengan sisa hari bulan ini.</p>
+                        </div>
+                        <div style="background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">📅 Batas Belanja Harian Aman</span>
+                            <span id="budget-daily-limit-text" style="font-size: 1.1rem; font-weight: 800; color: var(--success);">Rp 0 / hari</span>
+                            <p id="budget-daily-days-left" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; line-height: 1.2;">Berdasarkan sisa hari pada periode ini.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Mode Content Area -->
+                <div id="budget-mode-content">
+                    <!-- Dinamis via renderBudgetView() -->
+                </div>
+
+                <!-- Insights Disiplin Card -->
+                <div class="card" style="margin-top: 12px; padding: 12px 14px; border: 1px solid var(--purple); background: var(--card);">
+                    <h4 style="margin-bottom: 8px; color: var(--purple); border-bottom: 1.5px solid var(--purple); padding-bottom: 4px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <span>🏆 Insights Disiplin</span>
+                    </h4>
+                    <div id="budget-gamification-content">
+                        <!-- Dinamis via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: TARGET TABUNGAN & IMPIAN -->
+            <div id="budget-section-savings" style="display: none;">
+                <!-- Savings Goals Summary Card -->
+                <div id="savings-goals-summary-card" class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%); border: 1px solid rgba(139, 92, 246, 0.3);">
+                    <!-- Dinamis via renderSavingsGoalsView() -->
+                </div>
+
+                <!-- Savings Goals Grid Container -->
+                <div id="savings-goals-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                    <!-- Dinamis via renderSavingsGoalsView() -->
                 </div>
             </div>
         </div>
@@ -1044,14 +1432,22 @@
         <button id="bottom-nav-history" class="bottom-nav-item" onclick="navigateTo('history')" title="Riwayat">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
         </button>
-        <button id="bottom-nav-cashflow" class="bottom-nav-item" onclick="navigateTo('cashflow')" title="Laporan">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-        </button>
-        <button id="bottom-nav-dashboard" class="bottom-nav-item active" onclick="navigateTo('dashboard')" title="Dashboard">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-        </button>
         <button id="bottom-nav-budget" class="bottom-nav-item" onclick="navigateTo('budget')" title="Anggaran">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+        </button>
+        <button id="bottom-nav-dashboard" class="bottom-nav-item active" onclick="navigateTo('dashboard')" title="Beranda">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        </button>
+
+        <!-- FLOATING ACTION BUTTON FOR NEW TRANSACTION -->
+        <button id="bottom-nav-add" class="bottom-nav-item fab-add-btn" onclick="openTransactionModal()" title="Catat Transaksi Baru">
+            <div class="fab-add-circle">
+                <span style="font-size: 1.35rem; line-height: 1;">➕</span>
+            </div>
+        </button>
+
+        <button id="bottom-nav-cashflow" class="bottom-nav-item" onclick="navigateTo('cashflow')" title="Laporan">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
         </button>
         <button id="bottom-nav-debt" class="bottom-nav-item" onclick="navigateTo('debt')" title="Hutang">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>

@@ -311,6 +311,15 @@ registerDataChangedCallback(() => {
     if (typeof renderBudgetView === 'function') {
         renderBudgetView();
     }
+    if (typeof renderSavingsGoalsView === 'function') {
+        renderSavingsGoalsView();
+    }
+    if (typeof renderDebtView === 'function') {
+        renderDebtView();
+    }
+    if (typeof renderReceivablesView === 'function') {
+        renderReceivablesView();
+    }
 });
 
 let isInitialAuthCheck = true;

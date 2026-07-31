@@ -281,3 +281,26 @@ function setDefaultDate() {
         dateInput.value = `${yyyy}-${mm}-${dd}`;
     }
 }
+
+const parseCurrencyInput = parseCurrencyValue;
+
+function formatDateIndo(dateString) {
+    if (!dateString) return '-';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+window.parseCurrencyInput = parseCurrencyInput;
+window.formatDateIndo = formatDateIndo;
+window.escapeHtml = escapeHtml;
