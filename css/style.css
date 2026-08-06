@@ -334,8 +334,7 @@
             color: var(--text-main);
         }
 
-        input,
-        select {
+        input {
             width: 100%;
             padding: 12px;
             border: 1px solid #cbd5e1;
@@ -348,7 +347,55 @@
             -webkit-user-select: text;
             -ms-user-select: text;
             user-select: text;
-            /* Izinkan ketik & seleksi di kolom form */
+        }
+
+        /* UNIFORM CUSTOM APP-NATIVE DROPDOWN SYSTEM */
+        select {
+            width: 100%;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            cursor: pointer;
+            position: relative;
+            background-color: var(--card, #f8fafc) !important;
+            color: var(--text-main, #0f172a) !important;
+            border: 1.5px solid var(--border, #cbd5e1) !important;
+            border-radius: 10px !important;
+            padding: 10px 38px 10px 14px !important;
+            font-size: 0.9rem !important;
+            font-weight: 500 !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            outline: none !important;
+            transition: all 0.2s ease-in-out !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238b5cf6' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            background-size: 16px 16px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        select:hover {
+            border-color: var(--purple, #8b5cf6) !important;
+        }
+
+        select:focus {
+            border-color: var(--purple, #8b5cf6) !important;
+            box-shadow: 0 0 0 3.5px rgba(139, 92, 246, 0.18) !important;
+        }
+
+        /* CUSTOM OPTION & OPTGROUP STYLING INSIDE SELECT */
+        select option {
+            background-color: var(--card, #ffffff);
+            color: var(--text-main, #0f172a);
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        optgroup {
+            font-weight: 700;
+            color: var(--purple, #8b5cf6);
+            background-color: var(--bg);
         }
 
         input[type="date"] {
@@ -459,12 +506,12 @@
         .filter-container select {
             width: auto;
             flex: 1;
-            min-width: 150px;
-            padding: 8px 15px;
-            font-weight: 600;
-            background: #fff;
-            border-color: var(--accent);
-            color: var(--accent);
+            min-width: 140px;
+            padding: 9px 38px 9px 14px !important;
+            font-weight: 600 !important;
+            background-color: var(--card) !important;
+            border-color: rgba(139, 92, 246, 0.4) !important;
+            color: var(--purple) !important;
             cursor: pointer;
         }
 
@@ -1354,26 +1401,32 @@
             color-scheme: dark;
         }
 
-        body.dark-theme input,
-        body.dark-theme select {
+        body.dark-theme input {
             background-color: #0f172a;
             color: #f1f5f9;
             border-color: #334155;
         }
 
-        body.dark-theme input[type="date"] {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z'/%3E%3C/svg%3E");
+        body.dark-theme select {
+            background-color: var(--card, #1e293b) !important;
+            color: var(--text-main, #f8fafc) !important;
+            border-color: #334155 !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a78bfa' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E") !important;
         }
 
-        body.dark-theme input::placeholder {
-            color: #475569;
+        body.dark-theme select option {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
         }
 
-        body.dark-theme input:focus,
         body.dark-theme select:focus {
-            background-color: #0b0f19;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            border-color: var(--purple, #a78bfa) !important;
+            box-shadow: 0 0 0 3.5px rgba(167, 139, 250, 0.25) !important;
+        }
+
+        body.dark-theme optgroup {
+            color: #a78bfa;
+            background-color: #0f172a;
         }
 
         body.dark-theme .wallet-item {
@@ -2404,27 +2457,68 @@
                 margin-bottom: 14px !important;
             }
 
-            /* HERO CARDS COMPACT SCALING */
+            /* HERO & SUMMARY CARDS COMPACT SCALING (Savings Goals, Debt, Receivables, Budget) */
+            #savings-goals-summary-card,
             #debt-summary-hero-card,
             #receivables-summary-hero-card,
             .savings-goal-hero-card,
             .budget-hero-card {
-                padding: 10px 10px !important;
-                border-radius: 10px !important;
-                margin-bottom: 10px !important;
+                padding: 12px 14px !important;
+                border-radius: 12px !important;
+                margin-bottom: 12px !important;
             }
 
+            #savings-goals-summary-card .hero-card-label,
+            #debt-summary-hero-card .hero-card-label,
+            #receivables-summary-hero-card .hero-card-label {
+                font-size: 0.68rem !important;
+                letter-spacing: 0.3px !important;
+            }
+
+            #savings-goals-summary-card h2,
             #debt-summary-hero-card h2,
             #receivables-summary-hero-card h2,
-            .budget-hero-card h2 {
-                font-size: 1.05rem !important;
-                margin: 1px 0 !important;
+            .budget-hero-card h2,
+            .hero-card-amount {
+                font-size: 1.15rem !important;
+                margin-top: 1px !important;
+                margin-bottom: 2px !important;
+                line-height: 1.25 !important;
             }
 
-            #debt-summary-hero-card p,
-            #receivables-summary-hero-card p {
+            #savings-goals-summary-card h2 span,
+            #debt-summary-hero-card h2 span,
+            #receivables-summary-hero-card h2 span,
+            .hero-card-subamount {
+                font-size: 0.75rem !important;
+            }
+
+            .hero-card-stats {
                 font-size: 0.72rem !important;
-                margin: 1px 0 !important;
+                gap: 8px !important;
+                margin-top: 4px !important;
+                flex-wrap: wrap !important;
+            }
+
+            .hero-card-pct-box {
+                min-width: auto !important;
+                text-align: right !important;
+            }
+
+            .hero-card-pct-val {
+                font-size: 1.15rem !important;
+                line-height: 1.1 !important;
+            }
+
+            .hero-card-pct-label {
+                font-size: 0.65rem !important;
+            }
+
+            #savings-goals-summary-card .savings-goal-progress-bar,
+            #debt-summary-hero-card .savings-goal-progress-bar,
+            #receivables-summary-hero-card .savings-goal-progress-bar {
+                height: 7px !important;
+                margin-top: 8px !important;
             }
 
             /* BUDGETING COMPACT MOBILE SCALING */
@@ -2505,19 +2599,21 @@
                 font-size: 0.75rem !important;
             }
 
-            /* MODAL RESPONSIVENESS FOR MOBILE */
+            /* MODAL RESPONSIVENESS FOR MOBILE (Standard Modals stay centered popups) */
             .modal-overlay {
-                padding: 10px !important;
-                align-items: flex-end !important;
+                padding: 16px !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
 
             .modal-box {
-                width: 100% !important;
-                max-width: 100% !important;
-                border-radius: 18px 18px 0 0 !important;
-                padding: 16px 14px !important;
+                width: 92% !important;
+                max-width: 450px !important;
+                border-radius: 16px !important;
+                padding: 20px 16px !important;
                 max-height: 85vh !important;
                 overflow-y: auto !important;
+                margin: auto !important;
             }
 
             .modal-box h3 {
@@ -2663,15 +2759,24 @@
             background: var(--purple);
         }
 
-        /* ULTRA-SMOOTH SPRING SLIDE-UP ANIMATION FOR TRANSACTION MODAL */
+        /* ULTRA-SMOOTH SPRING SLIDE-UP ANIMATION FOR TRANSACTION MODAL (BOTTOM SHEET ONLY FOR INPUT TRANSAKSI) */
         #transaction-modal.modal-overlay {
             display: flex !important;
+            align-items: flex-end !important;
+            justify-content: center !important;
+            padding: 0 !important;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1);
         }
 
         #transaction-modal.modal-overlay .modal-box {
+            width: 100% !important;
+            max-width: 520px !important;
+            border-radius: 22px 22px 0 0 !important;
+            margin: 0 auto !important;
+            padding: 16px 14px !important;
+            max-height: 85vh !important;
             transform: translate3d(0, 100%, 0);
             transition: transform 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.12);
             will-change: transform;

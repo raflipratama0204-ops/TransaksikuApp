@@ -1,4 +1,4 @@
-const CACHE_NAME = 'transaksiku-cache-v77';
+const CACHE_NAME = 'transaksiku-cache-v83';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -11,6 +11,12 @@ const ASSETS_TO_CACHE = [
   './js/db.js',
   './js/charts.js',
   './js/ui.js',
+  './js/ui/core.js',
+  './js/ui/dashboard.js',
+  './js/ui/history.js',
+  './js/ui/modals.js',
+  './js/ui/budgeting.js',
+  './js/ui/debts.js',
   './manifest.json',
   './logo.png',
   'https://cdn.jsdelivr.net/npm/chart.js',

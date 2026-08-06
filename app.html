@@ -24,22 +24,22 @@
 
     <script>
         // Force cleanup of old Service Worker caches once to resolve page freeze issues
-        if (localStorage.getItem('transaksiku_cache_cleaned_v77') !== 'true') {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function (registrations) {
-                    for (let registration of registrations) {
-                        registration.unregister();
-                    }
-                });
-            }
-            if ('caches' in window) {
-                caches.keys().then(function (names) {
-                    for (let name of names) {
-                        caches.delete(name);
-                    }
-                });
-            }
-            localStorage.setItem('transaksiku_cache_cleaned_v77', 'true');
+            if (!localStorage.getItem('transaksiku_cache_cleaned_v83')) {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+                if ('caches' in window) {
+                    caches.keys().then(function (names) {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                    });
+                }
+                localStorage.setItem('transaksiku_cache_cleaned_v83', 'true');
             setTimeout(function () {
                 window.location.reload();
             }, 300);
@@ -1073,17 +1073,17 @@
         <div id="global-filter-card" class="card" style="display: none; margin-bottom: 20px;">
             <h3 style="margin-bottom: 12px; font-size: 1.1rem; border-bottom: 1px solid var(--bg); padding-bottom: 8px;">Filter Laporan</h3>
             <div class="filter-container" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 150px;">
+                <div style="flex: 1; min-width: 140px;">
                     <label style="font-size: 0.8rem; margin-bottom: 4px;">Periode Waktu</label>
-                    <select id="time-filter" onchange="handleTimeFilterChange()" style="width: 100%; border-color: var(--accent); color: var(--accent); background: #fff;"></select>
+                    <select id="time-filter" onchange="handleTimeFilterChange()"></select>
                 </div>
-                <div id="specific-month-container" style="display: none; flex: 1; min-width: 150px;">
+                <div id="specific-month-container" style="display: none; flex: 1; min-width: 140px;">
                     <label style="font-size: 0.8rem; margin-bottom: 4px;">Pilih Bulan Spesifik</label>
-                    <select id="specific-month-filter" onchange="applyFilter()" style="width: 100%; border-color: var(--accent); color: var(--accent); background: #fff;"></select>
+                    <select id="specific-month-filter" onchange="applyFilter()"></select>
                 </div>
-                <div style="flex: 1; min-width: 150px;">
+                <div style="flex: 1; min-width: 140px;">
                     <label style="font-size: 0.8rem; margin-bottom: 4px;">Kategori</label>
-                    <select id="category-filter" onchange="applyFilter()" style="width: 100%; border-color: var(--accent); color: var(--accent); background: #fff;">
+                    <select id="category-filter" onchange="applyFilter()">
                         <option value="all">Semua</option>
                     </select>
                 </div>
@@ -1462,7 +1462,12 @@
     <script src="js/utils.js"></script>
     <script src="js/db.js"></script>
     <script src="js/charts.js"></script>
-    <script src="js/ui.js"></script>
+    <script src="js/ui/core.js"></script>
+    <script src="js/ui/dashboard.js"></script>
+    <script src="js/ui/history.js"></script>
+    <script src="js/ui/modals.js"></script>
+    <script src="js/ui/budgeting.js"></script>
+    <script src="js/ui/debts.js"></script>
     <script src="js/app.js"></script>
 </body>
 
