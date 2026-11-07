@@ -889,7 +889,9 @@ function openGoalDepositModal(goalId) {
     const walletSelect = document.getElementById('deposit-wallet-id');
     if (walletSelect) {
         walletSelect.innerHTML = `<option value="">-- Tanpa Potong Dompet (Pencatatan Saja) --</option>` +
-            (state.wallets || []).map(w => `<option value="${w.id}">${w.name} (Saldo: ${formatRp(w.balance)})</option>`).join('');
+            (state.wallets || [])
+                .filter(w => w.id !== 999001 && w.name !== '🐷 Tabungan Impian')
+                .map(w => `<option value="${w.id}">${w.name} (Saldo: ${formatRp(w.balance)})</option>`).join('');
     }
 
     document.getElementById('deposit-amount').value = '';

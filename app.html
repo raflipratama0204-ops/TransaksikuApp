@@ -24,7 +24,7 @@
 
     <script>
         // Force cleanup of old Service Worker caches once to resolve page freeze issues
-            if (!localStorage.getItem('transaksiku_cache_cleaned_v83')) {
+            if (!localStorage.getItem('transaksiku_cache_cleaned_v87')) {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.getRegistrations().then(function (registrations) {
                         for (let registration of registrations) {
@@ -39,7 +39,7 @@
                         }
                     });
                 }
-                localStorage.setItem('transaksiku_cache_cleaned_v83', 'true');
+                localStorage.setItem('transaksiku_cache_cleaned_v87', 'true');
             setTimeout(function () {
                 window.location.reload();
             }, 300);
@@ -1071,18 +1071,18 @@
     <div class="container">
         <!-- GLOBAL FILTER CARD (Visible in History & Cashflow views) -->
         <div id="global-filter-card" class="card" style="display: none; margin-bottom: 20px;">
-            <h3 style="margin-bottom: 12px; font-size: 1.1rem; border-bottom: 1px solid var(--bg); padding-bottom: 8px;">Filter Laporan</h3>
-            <div class="filter-container" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 140px;">
-                    <label style="font-size: 0.8rem; margin-bottom: 4px;">Periode Waktu</label>
+            <h3 style="margin-bottom: 12px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Filter Transaksi & Laporan</h3>
+            <div class="filter-container">
+                <div class="filter-item">
+                    <label>Periode Waktu</label>
                     <select id="time-filter" onchange="handleTimeFilterChange()"></select>
                 </div>
-                <div id="specific-month-container" style="display: none; flex: 1; min-width: 140px;">
-                    <label style="font-size: 0.8rem; margin-bottom: 4px;">Pilih Bulan Spesifik</label>
+                <div id="specific-month-container" class="filter-item" style="display: none;">
+                    <label>Pilih Bulan Spesifik</label>
                     <select id="specific-month-filter" onchange="applyFilter()"></select>
                 </div>
-                <div style="flex: 1; min-width: 140px;">
-                    <label style="font-size: 0.8rem; margin-bottom: 4px;">Kategori</label>
+                <div class="filter-item">
+                    <label>Kategori</label>
                     <select id="category-filter" onchange="applyFilter()">
                         <option value="all">Semua</option>
                     </select>

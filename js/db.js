@@ -37,7 +37,17 @@ const state = {
     receivablesChart: null
 };
 
-getOrCreateCentralSavingsWallet();
+// Kantong Tabungan Impian hanya dipastikan ada jika terdapat target tabungan aktif dengan saldo tersimpan
+const totalSavingsInGoals = (state.savingsGoals || []).reduce((sum, g) => sum + (Number(g.currentAmount) || 0), 0);
+if (totalSavingsInGoals > 0) {
+    const centralWallet = getOrCreateCentralSavingsWallet();
+    if (centralWallet.balance === 0) {
+        centralWallet.balance = totalSavingsInGoals;
+    }
+} else if (!state.savingsGoals || state.savingsGoals.length === 0) {
+    // Jika tidak ada target tabungan sama sekali dan kantong impian bersaldo 0, bersihkan agar tidak muncul kembali
+    state.wallets = (state.wallets || []).filter(w => !((w.id === 999001 || w.name === '🐷 Tabungan Impian') && w.balance === 0));
+}
 
 if (Array.isArray(state.transactions)) {
     state.transactions.forEach(t => {
@@ -519,6 +529,7 @@ window.clearAllDataCloudAndLocal = clearAllDataCloudAndLocal;
 // --- SAVINGS GOALS (TARGET TABUNGAN & IMPIAN) FUNCTIONS ---
 function addSavingsGoal(goalData) {
     if (!state.savingsGoals) state.savingsGoals = [];
+    const centralWallet = getOrCreateCentralSavingsWallet();
     const newGoal = {
         id: 'goal_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
         name: goalData.name || 'Target Tanpa Nama',
@@ -532,6 +543,7 @@ function addSavingsGoal(goalData) {
         updatedAt: Date.now()
     };
     if (newGoal.currentAmount > 0) {
+        centralWallet.balance = (Number(centralWallet.balance) || 0) + newGoal.currentAmount;
         newGoal.history.push({
             id: 'gh_' + Date.now(),
             type: 'deposit',
@@ -563,6 +575,10 @@ function updateSavingsGoal(id, updatedFields) {
 function deleteSavingsGoal(id) {
     if (!state.savingsGoals) return;
     state.savingsGoals = state.savingsGoals.filter(g => g.id !== id);
+    // Jika semua target tabungan sudah dihapus dan kantong impian sudah kosong (saldo 0), bersihkan dari daftar dompet
+    if (state.savingsGoals.length === 0) {
+        state.wallets = (state.wallets || []).filter(w => !((w.id === 999001 || w.name === '🐷 Tabungan Impian') && w.balance === 0));
+    }
     saveData();
 }
 
@@ -570,7 +586,8 @@ function getOrCreateCentralSavingsWallet() {
     if (!Array.isArray(state.wallets)) state.wallets = [];
     let w = state.wallets.find(wal => wal.id === 999001 || wal.name === '🐷 Tabungan Impian');
     if (!w) {
-        w = { id: 999001, name: '🐷 Tabungan Impian', type: 'invest', balance: 0 };
+        const maxOrder = state.wallets.reduce((max, item) => Math.max(max, item.order !== undefined ? item.order : -1), -1);
+        w = { id: 999001, name: '🐷 Tabungan Impian', type: 'invest', balance: 0, order: maxOrder + 1 };
         state.wallets.push(w);
     }
     return w;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'transaksiku-cache-v83';
+const CACHE_NAME = 'transaksiku-cache-v87';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -19,7 +19,7 @@ const ASSETS_TO_CACHE = [
   './js/ui/debts.js',
   './manifest.json',
   './logo.png',
-  'https://cdn.jsdelivr.net/npm/chart.js',
+  'https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'

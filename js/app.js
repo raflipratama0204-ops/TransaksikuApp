@@ -283,6 +283,7 @@ window.addWallet = addWallet;
 window.editWalletName = editWalletName;
 window.editWalletBalance = editWalletBalance;
 window.deleteWallet = deleteWallet;
+window.moveWallet = moveWallet;
 window.addTransaction = addTransaction;
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;

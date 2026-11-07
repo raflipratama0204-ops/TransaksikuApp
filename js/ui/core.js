@@ -201,7 +201,11 @@ function updateSummaries() {
     });
 
     const totalSavingsGoals = (state.savingsGoals || []).reduce((sum, g) => sum + (Number(g.currentAmount) || 0), 0);
-    const totalSavingsAndInvest = totalInvest + totalSavingsGoals;
+    const centralWallet = (state.wallets || []).find(w => w.id === 999001 || w.name === '🐷 Tabungan Impian');
+    const centralBalance = centralWallet ? (Number(centralWallet.balance) || 0) : 0;
+    // Hindari duplikasi perhitungan jika saldo target sudah ada di dalam dompet investasi '🐷 Tabungan Impian'
+    const unlinkedSavings = Math.max(0, totalSavingsGoals - centralBalance);
+    const totalSavingsAndInvest = totalInvest + unlinkedSavings;
 
     const sumTotalEl = document.getElementById('sum-total');
     const sumCashEl = document.getElementById('sum-cash');
@@ -210,6 +214,151 @@ function updateSummaries() {
     if (sumTotalEl) sumTotalEl.innerText = state.hideBalancesActive ? 'Rp ••••••' : formatRp(totalCash + totalSavingsAndInvest);
     if (sumCashEl) sumCashEl.innerText = state.hideBalancesActive ? 'Rp ••••••' : formatRp(totalCash);
     if (sumPortfolioEl) sumPortfolioEl.innerText = state.hideBalancesActive ? 'Rp ••••••' : formatRp(totalSavingsAndInvest);
+}
+
+function moveWallet(id, direction) {
+    if (!Array.isArray(state.wallets)) return;
+    const index = state.wallets.findIndex(w => w.id === id);
+    if (index === -1) return;
+
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= state.wallets.length) return;
+
+    const [moved] = state.wallets.splice(index, 1);
+    state.wallets.splice(newIndex, 0, moved);
+
+    state.wallets.forEach((w, idx) => {
+        w.order = idx;
+        w.updatedAt = Date.now();
+    });
+
+    saveData();
+    renderWallets();
+}
+
+function initWalletDragAndDrop() {
+    const list = document.getElementById('wallet-list');
+    if (!list) return;
+
+    const items = Array.from(list.querySelectorAll('.wallet-item'));
+    items.forEach(item => {
+        // Pointerdown pada kartu maupun gagang (bebas bayangan, 100% solid lifted card)
+        item.addEventListener('pointerdown', (e) => {
+            // Abaikan klik kanan atau klik pada tombol aksi, opsi, dropdown
+            if (e.button !== 0 && e.pointerType === 'mouse') return;
+            if (e.target.closest('button, .wallet-dropdown, a, input, select')) return;
+
+            // Di layar sentuh (HP), hanya aktifkan jika menyentuh gagang agar scroll halaman tetap nyaman
+            if (e.pointerType === 'touch' && !e.target.closest('.wallet-drag-handle')) return;
+
+            const walletId = Number(item.getAttribute('data-wallet-id'));
+            if (!walletId) return;
+
+            const rect = item.getBoundingClientRect();
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const shiftX = startX - rect.left;
+            const shiftY = startY - rect.top;
+
+            let isDragging = false;
+            let floatingCard = null;
+            let currentTarget = null;
+            let insertAfter = false;
+
+            try {
+                item.setPointerCapture(e.pointerId);
+            } catch (err) {}
+
+            const onPointerMove = (moveEvt) => {
+                const dist = Math.hypot(moveEvt.clientX - startX, moveEvt.clientY - startY);
+                if (!isDragging && dist < 4) return;
+
+                if (!isDragging) {
+                    isDragging = true;
+                    if (navigator.vibrate) navigator.vibrate(20);
+
+                    // Buat kartu nyata yang melayang 100% SOLID (bukan bayangan tipis browser)
+                    floatingCard = item.cloneNode(true);
+                    floatingCard.classList.remove('wallet-placeholder');
+                    floatingCard.classList.add('wallet-pointer-floating-card');
+                    floatingCard.style.width = `${rect.width}px`;
+                    floatingCard.style.height = `${rect.height}px`;
+                    floatingCard.style.left = `${moveEvt.clientX - shiftX}px`;
+                    floatingCard.style.top = `${moveEvt.clientY - shiftY}px`;
+                    document.body.appendChild(floatingCard);
+
+                    // Slot posisi asal menjadi placeholder
+                    item.classList.add('wallet-placeholder');
+                }
+
+                // Gerakkan kartu melayang solid mengikuti pergerakan kursor/jari secara presisi
+                floatingCard.style.left = `${moveEvt.clientX - shiftX}px`;
+                floatingCard.style.top = `${moveEvt.clientY - shiftY}px`;
+
+                // Deteksi item target di bawah kursor
+                const elem = document.elementFromPoint(moveEvt.clientX, moveEvt.clientY);
+                const overItem = elem ? elem.closest('.wallet-item') : null;
+
+                items.forEach(it => {
+                    if (it !== overItem) it.classList.remove('drag-over-top', 'drag-over-bottom');
+                });
+
+                if (overItem && overItem !== item) {
+                    currentTarget = overItem;
+                    const targetRect = overItem.getBoundingClientRect();
+                    insertAfter = (moveEvt.clientY - targetRect.top) > (targetRect.height / 2);
+                    overItem.classList.toggle('drag-over-top', !insertAfter);
+                    overItem.classList.toggle('drag-over-bottom', insertAfter);
+                } else {
+                    currentTarget = null;
+                }
+            };
+
+            const onPointerUp = (upEvt) => {
+                item.removeEventListener('pointermove', onPointerMove);
+                item.removeEventListener('pointerup', onPointerUp);
+                item.removeEventListener('pointercancel', onPointerUp);
+
+                try {
+                    item.releasePointerCapture(e.pointerId);
+                } catch (err) {}
+
+                if (floatingCard) {
+                    floatingCard.remove();
+                    floatingCard = null;
+                }
+
+                items.forEach(it => it.classList.remove('drag-over-top', 'drag-over-bottom', 'wallet-placeholder'));
+
+                if (isDragging && currentTarget && currentTarget !== item) {
+                    const fromId = walletId;
+                    const toId = Number(currentTarget.getAttribute('data-wallet-id'));
+
+                    const fromIndex = state.wallets.findIndex(w => w.id === fromId);
+                    const toIndex = state.wallets.findIndex(w => w.id === toId);
+
+                    if (fromIndex !== -1 && toIndex !== -1) {
+                        const [moved] = state.wallets.splice(fromIndex, 1);
+                        let targetIndex = state.wallets.findIndex(w => w.id === toId);
+                        if (insertAfter) targetIndex++;
+                        state.wallets.splice(targetIndex, 0, moved);
+
+                        state.wallets.forEach((w, idx) => {
+                            w.order = idx;
+                            w.updatedAt = Date.now();
+                        });
+
+                        saveData();
+                        renderWallets();
+                    }
+                }
+            };
+
+            item.addEventListener('pointermove', onPointerMove);
+            item.addEventListener('pointerup', onPointerUp);
+            item.addEventListener('pointercancel', onPointerUp);
+        });
+    });
 }
 
 function renderWallets() {
@@ -225,15 +374,35 @@ function renderWallets() {
     if (selectFrom) selectFrom.innerHTML = ''; 
     if (selectTo) selectTo.innerHTML = '';
 
-    state.wallets.forEach(w => {
+    // Pertahankan urutan yang disimpan jika properti order ada
+    if (Array.isArray(state.wallets)) {
+        state.wallets.sort((a, b) => {
+            if (a.order !== undefined && b.order !== undefined) {
+                return a.order - b.order;
+            }
+            return 0;
+        });
+    }
+
+    state.wallets.forEach((w, index) => {
         const typeClass = w.type === 'invest' ? 'invest-type' : 'cash-type';
         const typeLabel = w.type === 'invest' ? 'Investasi' : 'Kas & Bank';
         const displayBalance = state.hideBalancesActive ? 'Rp ••••••' : formatRp(w.balance);
 
         list.innerHTML += `
-            <div class="wallet-item ${typeClass}">
-                <div class="w-info">
-                    <h4>${w.name}</h4>
+            <div class="wallet-item ${typeClass}" data-wallet-id="${w.id}">
+                <div class="wallet-drag-handle" title="Tahan & geser untuk memindahkan posisi dompet">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="5" r="1.5"></circle>
+                        <circle cx="9" cy="12" r="1.5"></circle>
+                        <circle cx="9" cy="19" r="1.5"></circle>
+                        <circle cx="15" cy="5" r="1.5"></circle>
+                        <circle cx="15" cy="12" r="1.5"></circle>
+                        <circle cx="15" cy="19" r="1.5"></circle>
+                    </svg>
+                </div>
+                <div class="w-info" style="flex: 1; min-width: 0;">
+                    <h4 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${w.name}</h4>
                     <p>${typeLabel}</p>
                 </div>
                 <div class="w-balance">
@@ -241,6 +410,8 @@ function renderWallets() {
                     <div class="wallet-menu-container">
                         <button onclick="toggleWalletMenu(${w.id})" class="btn-option">Opsi ▼</button>
                         <div id="w-menu-${w.id}" class="wallet-dropdown" style="display:none;">
+                            ${index > 0 ? `<button onclick="moveWallet(${w.id}, -1); toggleWalletMenu(${w.id})">⬆️ Naikkan Urutan</button>` : ''}
+                            ${index < state.wallets.length - 1 ? `<button onclick="moveWallet(${w.id}, 1); toggleWalletMenu(${w.id})">⬇️ Turunkan Urutan</button>` : ''}
                             <button onclick="editWalletName(${w.id}); toggleWalletMenu(${w.id})">✏️ Ubah Nama</button>
                             <button onclick="editWalletBalance(${w.id}); toggleWalletMenu(${w.id})">⚙️ Koreksi Saldo</button>
                             <button onclick="deleteWallet(${w.id}); toggleWalletMenu(${w.id})" style="color:var(--danger);">🗑️ Hapus Akun</button>
@@ -255,6 +426,8 @@ function renderWallets() {
         if (selectFrom) selectFrom.innerHTML += option; 
         if (selectTo) selectTo.innerHTML += option;
     });
+
+    initWalletDragAndDrop();
 
     updateSummaries();
     const transMainTypeEl = document.getElementById('trans-main-type');
@@ -280,7 +453,8 @@ async function addWallet() {
     }
 
     const newId = Date.now();
-    state.wallets.push({ id: newId, name: name, balance: initialBalance, type: type });
+    const maxOrder = state.wallets.reduce((max, w) => Math.max(max, w.order !== undefined ? w.order : -1), -1);
+    state.wallets.push({ id: newId, name: name, balance: initialBalance, type: type, order: maxOrder + 1 });
 
     if (initialBalance > 0) {
         const dateObj = new Date();
@@ -350,7 +524,16 @@ async function deleteWallet(id) {
     let isConfirmed = await customConfirm(`Apakah Anda yakin ingin menghapus akun '${w.name}'?`, 'Konfirmasi Hapus');
     if (isConfirmed) {
         state.wallets = state.wallets.filter(wallet => wallet.id !== id);
+
+        // Catat ID dompet yang dihapus agar tidak dibangkitkan lagi oleh sinkronisasi cloud
+        const deletedWalletIds = JSON.parse(localStorage.getItem('transaksiku_deleted_wallet_ids') || '[]');
+        if (!deletedWalletIds.includes(id)) {
+            deletedWalletIds.push(id);
+            localStorage.setItem('transaksiku_deleted_wallet_ids', JSON.stringify(deletedWalletIds));
+        }
+
         saveData();
+        renderWallets();
     }
 }
 
