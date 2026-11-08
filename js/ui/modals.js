@@ -344,6 +344,7 @@ function populateEditCategories(mainType) {
         categorySelect.innerHTML = `
             <option value="Mutasi">🔄 Mutasi Kas (Tarik / Setor Tunai)</option>
             <option value="Investasi">🏦 Top Up Portofolio (Beli Saham/Reksa Dana)</option>
+            <option value="Penarikan Investasi">📥 Penarikan Investasi (Withdraw ke Kas/Bank)</option>
         `;
     } else if (mainType === 'adjustment') {
         categorySelect.innerHTML = `
@@ -385,6 +386,20 @@ function updateEditCategoryOptions() {
         if (debtDueDayField) debtDueDayField.style.display = 'none';
         document.getElementById('edit-single-wallet-field').style.display = 'none';
         document.getElementById('edit-transfer-fields').style.display = 'block';
+
+        const editFromLabel = document.getElementById('edit-transfer-from-label');
+        const editToLabel = document.getElementById('edit-transfer-to-label');
+        if (category === 'Penarikan Investasi') {
+            if (editFromLabel) editFromLabel.innerText = 'Tarik Dari Dompet Investasi:';
+            if (editToLabel) editToLabel.innerText = 'Masuk Ke Dompet Kas / Bank:';
+        } else if (category === 'Investasi') {
+            if (editFromLabel) editFromLabel.innerText = 'Sumber Dana (Kas / Bank):';
+            if (editToLabel) editToLabel.innerText = 'Dompet Investasi Tujuan:';
+        } else {
+            if (editFromLabel) editFromLabel.innerText = 'Sumber Dana (Dari):';
+            if (editToLabel) editToLabel.innerText = 'Tujuan Simpanan (Ke):';
+        }
+
         if (typeof updateTransferWalletOptions === 'function') updateTransferWalletOptions(category, 'edit-');
     } else if (mainType === 'debt') {
         if (debtCashflowField) debtCashflowField.style.display = 'block';
@@ -449,7 +464,7 @@ function editTransaction(id) {
         <option value="income">Pemasukan</option>
         <option value="debt" style="color: var(--purple); font-weight: bold;">Ambil Hutang</option>
         <option value="receivables" style="color: var(--success); font-weight: bold;">Beri Pinjaman / Piutang</option>
-        <option value="transfer">Pindah Uang</option>
+        <option value="transfer">Pindah Uang / Transfer / Withdraw</option>
     `;
     if (t.mainType === 'adjustment') {
         mainTypeSelect.innerHTML += `<option value="adjustment">Penyesuaian Saldo</option>`;
@@ -717,6 +732,31 @@ function toggleTransferFields() {
         if (transferFields) transferFields.style.display = 'block';
         if (debtCashflowField) debtCashflowField.style.display = 'none';
         if (debtDueDayField) debtDueDayField.style.display = 'none';
+
+        const fromLabel = document.getElementById('transfer-from-label');
+        const toLabel = document.getElementById('transfer-to-label');
+        const descInput = document.getElementById('trans-desc');
+
+        if (category === 'Penarikan Investasi') {
+            if (fromLabel) fromLabel.innerText = 'Tarik Dari Dompet Investasi:';
+            if (toLabel) toLabel.innerText = 'Masuk Ke Dompet Kas / Bank Tujuan:';
+            if (descInput && (!descInput.value || descInput.value.startsWith('Tarik') || descInput.value.startsWith('Top Up') || descInput.value.startsWith('Mutasi'))) {
+                descInput.placeholder = 'Contoh: Penarikan RDN ke BCA, Profit Taking...';
+            }
+        } else if (category === 'Investasi') {
+            if (fromLabel) fromLabel.innerText = 'Sumber Dana (Kas / Bank):';
+            if (toLabel) toLabel.innerText = 'Simpan Ke Dompet Investasi:';
+            if (descInput && (!descInput.value || descInput.value.startsWith('Tarik') || descInput.value.startsWith('Top Up') || descInput.value.startsWith('Mutasi'))) {
+                descInput.placeholder = 'Contoh: Beli Saham BBCA, Top Up RDN...';
+            }
+        } else {
+            if (fromLabel) fromLabel.innerText = 'Kirim Dari Dompet:';
+            if (toLabel) toLabel.innerText = 'Simpan Ke Dompet:';
+            if (descInput && (!descInput.value || descInput.value.startsWith('Tarik') || descInput.value.startsWith('Top Up') || descInput.value.startsWith('Mutasi'))) {
+                descInput.placeholder = 'Contoh: Makan siang, Gaji, Belanja Sembako...';
+            }
+        }
+
         updateTransferWalletOptions(category);
     } else if (mainType === 'debt') {
         if (debtCashflowField) debtCashflowField.style.display = 'block';
@@ -781,11 +821,17 @@ function updateTransferWalletOptions(category, prefix = '') {
     selectTo.innerHTML = '';
 
     state.wallets.forEach(w => {
-        const option = `<option value="${w.id}">${w.name}</option>`;
+        const option = `<option value="${w.id}">${w.name} (${formatRp(w.balance)})</option>`;
         if (category === 'Investasi') {
             if (w.type === 'cash') {
                 selectFrom.innerHTML += option;
             } else if (w.type === 'invest') {
+                selectTo.innerHTML += option;
+            }
+        } else if (category === 'Penarikan Investasi') {
+            if (w.type === 'invest') {
+                selectFrom.innerHTML += option;
+            } else if (w.type === 'cash') {
                 selectTo.innerHTML += option;
             }
         } else {
@@ -957,6 +1003,28 @@ function deleteCustomCategoryFromSettings(name, type) {
     }
 }
 
+// Helper untuk membuka modal transaksi baru langsung pada mode Penarikan Investasi / Withdraw
+function openWithdrawModal(walletId) {
+    openTransactionModal();
+    const mainTypeEl = document.getElementById('trans-main-type');
+    if (mainTypeEl) {
+        mainTypeEl.value = 'transfer';
+        updateCategoryOptions();
+    }
+    const catEl = document.getElementById('trans-category');
+    if (catEl) {
+        catEl.value = 'Penarikan Investasi';
+        toggleTransferFields();
+    }
+    if (walletId) {
+        const fromSelect = document.getElementById('trans-from');
+        if (fromSelect && fromSelect.querySelector(`option[value="${walletId}"]`)) {
+            fromSelect.value = walletId;
+        }
+    }
+}
+
 window.openTransactionModal = openTransactionModal;
 window.closeTransactionModal = closeTransactionModal;
 window.setupSwipeDownToClose = setupSwipeDownToClose;
+window.openWithdrawModal = openWithdrawModal;

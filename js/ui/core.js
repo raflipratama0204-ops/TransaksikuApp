@@ -178,6 +178,7 @@ function updateCategoryOptions() {
         categorySelect.innerHTML = `
             <option value="Mutasi">🔄 Mutasi Kas (Tarik / Setor Tunai)</option>
             <option value="Investasi">🏦 Top Up Portofolio (Beli Saham/Reksa Dana)</option>
+            <option value="Penarikan Investasi">📥 Penarikan Investasi (Withdraw ke Kas/Bank)</option>
         `;
     }
 

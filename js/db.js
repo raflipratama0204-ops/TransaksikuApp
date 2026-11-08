@@ -210,13 +210,13 @@ async function pullCloudData(userId) {
 
         if (doc.exists) {
             const cloudData = doc.data();
-            
+
             // Periksa apakah cloud mengalami reset baru dari perangkat lain
             const cloudReset = cloudData.last_reset;
             const localReset = localStorage.getItem('transaksiku_last_reset');
             if (cloudReset && cloudReset !== localReset) {
                 localStorage.setItem('transaksiku_last_reset', cloudReset);
-                
+
                 localStorage.removeItem('keuangan_wallets28');
                 localStorage.removeItem('keuangan_transactions28');
                 localStorage.removeItem('transaksiku_custom_categories');
@@ -224,7 +224,7 @@ async function pullCloudData(userId) {
                 localStorage.removeItem('transaksiku_deleted_tx_ids');
                 localStorage.removeItem('transaksiku_deleted_wallet_ids');
                 localStorage.removeItem('transaksiku_deleted_categories');
-                
+
                 state.wallets = [
                     { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
                     { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
@@ -232,11 +232,11 @@ async function pullCloudData(userId) {
                 ];
                 state.transactions = [];
                 state.customCategories = [];
-                
+
                 localStorage.setItem('keuangan_wallets28', JSON.stringify(state.wallets));
                 localStorage.setItem('keuangan_transactions28', JSON.stringify(state.transactions));
                 localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
-                
+
                 notifyDataChanged();
                 await syncLocalToCloud(userId);
                 showToast('Sinkronisasi data kosong (reset) dari perangkat lain selesai!');
@@ -265,7 +265,7 @@ async function pullCloudData(userId) {
             localStorage.removeItem('transaksiku_deleted_categories');
 
             notifyDataChanged();
-            
+
             // Perbarui cloud dengan hasil penggabungan
             await syncLocalToCloud(userId);
             showToast('Sinkronisasi selesai. Data berhasil digabungkan!');
@@ -357,16 +357,16 @@ function subscribeToCloudChanges(userId) {
     unsubscribeRealtime = db.collection('user_sync').doc(userId).onSnapshot((doc) => {
         if (doc.exists) {
             const cloudData = doc.data();
-            
+
             // Periksa apakah cloud mengalami reset baru dari perangkat lain
             const cloudReset = cloudData.last_reset;
             const localReset = localStorage.getItem('transaksiku_last_reset');
             console.log(`[SYNC RESET DEBUG] Snapshot received. cloudReset: "${cloudReset}", localReset: "${localReset}"`);
-            
+
             if (cloudReset && cloudReset !== localReset) {
                 console.log("[SYNC RESET DEBUG] Reset triggered on another device! Wiping local state...");
                 localStorage.setItem('transaksiku_last_reset', cloudReset);
-                
+
                 localStorage.removeItem('keuangan_wallets28');
                 localStorage.removeItem('keuangan_transactions28');
                 localStorage.removeItem('transaksiku_custom_categories');
@@ -374,7 +374,7 @@ function subscribeToCloudChanges(userId) {
                 localStorage.removeItem('transaksiku_deleted_tx_ids');
                 localStorage.removeItem('transaksiku_deleted_wallet_ids');
                 localStorage.removeItem('transaksiku_deleted_categories');
-                
+
                 state.wallets = [
                     { id: 1, name: 'Dompet Tunai', balance: 0, type: 'cash' },
                     { id: 2, name: 'Rekening Bank', balance: 0, type: 'cash' },
@@ -382,11 +382,11 @@ function subscribeToCloudChanges(userId) {
                 ];
                 state.transactions = [];
                 state.customCategories = [];
-                
+
                 localStorage.setItem('keuangan_wallets28', JSON.stringify(state.wallets));
                 localStorage.setItem('keuangan_transactions28', JSON.stringify(state.transactions));
                 localStorage.setItem('transaksiku_custom_categories', JSON.stringify(state.customCategories));
-                
+
                 notifyDataChanged();
                 console.log("[SYNC RESET DEBUG] Local state wiped successfully.");
                 return; // Stop here, no merge or upload back!
@@ -404,7 +404,7 @@ function subscribeToCloudChanges(userId) {
             const currentWallets = JSON.parse(localStorage.getItem('keuangan_wallets28') || '[]');
             const currentCategories = JSON.parse(localStorage.getItem('transaksiku_custom_categories') || '[]');
 
-            const hasChanges = 
+            const hasChanges =
                 !areTransactionsEqual(currentTransactions, merged.transactions) ||
                 !areWalletsEqual(currentWallets, merged.wallets) ||
                 !areCategoriesEqual(currentCategories, merged.customCategories);
@@ -425,7 +425,7 @@ function subscribeToCloudChanges(userId) {
                 localStorage.removeItem('transaksiku_deleted_categories');
 
                 notifyDataChanged();
-                
+
                 // Cek apakah data cloud tertinggal dibanding hasil penggabungan kita (misal karena offline changes)
                 const cloudWallets = cloudData.wallets || [];
                 const cloudTransactions = cloudData.transactions || [];
@@ -519,7 +519,7 @@ async function clearAllDataCloudAndLocal() {
             subscribeToCloudChanges(user.uid);
         }
     }
-    
+
     localStorage.removeItem('transaksiku_resetting');
     console.log("[SYNC RESET DEBUG] clearAllDataCloudAndLocal completed.");
 }
@@ -641,7 +641,7 @@ function addGoalTransaction(goalId, { type, amount, walletId, note }) {
                     mainType: 'transfer',
                     type: 'transfer',
                     amount: numAmount,
-                    category: 'Investasi / Top Up Portofolio',
+                    category: 'Penarikan Investasi',
                     walletId: Number(walletId),
                     fromId: centralSavingsWallet.id,
                     toId: Number(walletId),

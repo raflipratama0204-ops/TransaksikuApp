@@ -221,8 +221,8 @@ function renderTransactions() {
     }
 
     sortedTrans.forEach(t => {
-        let badgeClass = ''; 
-        let valColor = ''; 
+        let badgeClass = '';
+        let valColor = '';
         let cardTypeClass = '';
 
         if (t.mainType === 'income') {
@@ -237,29 +237,35 @@ function renderTransactions() {
             badgeClass = 'bg-gray';
             valColor = (t.category === 'Koreksi (+)' || t.category === 'Saldo Awal') ? 'color: var(--success);' : 'color: var(--danger);';
             cardTypeClass = 'adjustment-card';
+        } else if (t.category === 'Penarikan Investasi') {
+            badgeClass = 'bg-green';
+            valColor = 'color: var(--success); font-weight: 700;';
+            cardTypeClass = 'income-card';
         } else {
             badgeClass = 'bg-blue'; valColor = 'color: var(--text-main);'; cardTypeClass = 'transfer-card';
         }
 
         let walletDisplay = '';
-        if (t.mainType === 'transfer') {
-            walletDisplay = `🔄 ${t.walletName}`;
-        } else if (t.mainType === 'debt' && !t.walletId) {
-            walletDisplay = `💸 ${t.walletName}`;
-        } else {
-            walletDisplay = `💳 ${t.walletName}`;
-        }
+            if (t.category === 'Penarikan Investasi') {
+                walletDisplay = `📥 ${t.walletName}`;
+            } else if (t.mainType === 'transfer') {
+                walletDisplay = `🔄 ${t.walletName}`;
+            } else if (t.mainType === 'debt' && !t.walletId) {
+                walletDisplay = `💸 ${t.walletName}`;
+            } else {
+                walletDisplay = `💳 ${t.walletName}`;
+            }
 
-        const showTime = localStorage.getItem('transaksiku_show_time') !== 'false';
-        let timeHtml = '';
-        if (showTime) {
-            const tDate = new Date(t.timestamp || t.id);
-            const hrs = String(tDate.getHours()).padStart(2, '0');
-            const mins = String(tDate.getMinutes()).padStart(2, '0');
-            timeHtml = ` <span style="font-size:0.75rem; color:var(--text-muted); margin-left:6px;">⏰ ${hrs}:${mins}</span>`;
-        }
+            const showTime = localStorage.getItem('transaksiku_show_time') !== 'false';
+            let timeHtml = '';
+            if (showTime) {
+                const tDate = new Date(t.timestamp || t.id);
+                const hrs = String(tDate.getHours()).padStart(2, '0');
+                const mins = String(tDate.getMinutes()).padStart(2, '0');
+                timeHtml = ` <span style="font-size:0.75rem; color:var(--text-muted); margin-left:6px;">⏰ ${hrs}:${mins}</span>`;
+            }
 
-        container.innerHTML += `
+            container.innerHTML += `
             <div class="transaction-card ${cardTypeClass}">
                 <div class="t-card-header">
                     <span class="badge ${badgeClass}">${t.category}</span>
@@ -278,5 +284,5 @@ function renderTransactions() {
                 </div>
             </div>
         `;
-    });
+        });
 }
