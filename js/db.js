@@ -22,10 +22,6 @@ const state = {
             "Tagihan & Utilitas": 650000,
             "Hiburan": 350000
         },
-        allocations503020: { needsPercent: 50, wantsPercent: 30, savingsPercent: 20 },
-        needsCategories: ["Makanan & Minuman", "Belanja Kebutuhan", "Belanja", "Transportasi", "Tagihan & Utilitas", "Kesehatan", "Pendidikan"],
-        wantsCategories: ["Belanja Keinginan", "Hiburan", "Jalan-jalan", "Hobi"],
-        savingsCategories: ["Investasi", "Tabungan", "Dana Darurat"],
         rolloverEnabled: true,
         rolloverBalance: 0,
         lastRolloverMonth: null,
@@ -47,6 +43,10 @@ if (totalSavingsInGoals > 0) {
 } else if (!state.savingsGoals || state.savingsGoals.length === 0) {
     // Jika tidak ada target tabungan sama sekali dan kantong impian bersaldo 0, bersihkan agar tidak muncul kembali
     state.wallets = (state.wallets || []).filter(w => !((w.id === 999001 || w.name === '🐷 Tabungan Impian') && w.balance === 0));
+}
+
+if (state.budgetSettings && state.budgetSettings.activeMode === '50_30_20') {
+    state.budgetSettings.activeMode = 'envelope';
 }
 
 if (Array.isArray(state.transactions)) {

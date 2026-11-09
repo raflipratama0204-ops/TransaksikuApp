@@ -957,9 +957,9 @@ function renderSettingsCustomCategories() {
     };
 
     const groupLabels = {
-        needs: '🏠 50% Needs',
-        wants: '🎮 30% Wants',
-        savings: '💎 20% Savings'
+        needs: '🏠 Kebutuhan Pokok',
+        wants: '🎮 Keinginan & Hiburan',
+        savings: '💎 Tabungan & Investasi'
     };
 
     state.customCategories.forEach((c) => {

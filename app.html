@@ -24,25 +24,22 @@
 
     <script>
         // Force cleanup of old Service Worker caches once to resolve page freeze issues
-            if (!localStorage.getItem('transaksiku_cache_cleaned_v89')) {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-                        for (let registration of registrations) {
-                            registration.unregister();
-                        }
-                    });
-                }
-                if ('caches' in window) {
-                    caches.keys().then(function (names) {
-                        for (let name of names) {
-                            caches.delete(name);
-                        }
-                    });
-                }
-                localStorage.setItem('transaksiku_cache_cleaned_v89', 'true');
-            setTimeout(function () {
-                window.location.reload();
-            }, 300);
+        if (!localStorage.getItem('transaksiku_cache_cleaned_v106')) {
+            localStorage.setItem('transaksiku_cache_cleaned_v106', 'true');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+            }
+            if ('caches' in window) {
+                caches.keys().then(function (names) {
+                    for (let name of names) {
+                        caches.delete(name);
+                    }
+                });
+            }
         }
     </script>
 
@@ -150,11 +147,11 @@
             </h3>
             
             <!-- Tabs Navigation -->
-            <div class="settings-tabs" style="display: flex; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
-                <button class="settings-tab-btn active" onclick="switchSettingsTab('settings-tab-display')" style="flex: 1; padding: 10px 2px; background: none; border: none; border-bottom: 2px solid var(--purple); color: var(--purple); font-weight: 600; cursor: pointer; font-size: 0.72rem; min-width: 0; text-align: center;">Tampilan</button>
-                <button class="settings-tab-btn" onclick="switchSettingsTab('settings-tab-currency')" style="flex: 1; padding: 10px 2px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; font-size: 0.72rem; min-width: 0; text-align: center;">Mata Uang</button>
-                <button class="settings-tab-btn" onclick="switchSettingsTab('settings-tab-categories')" style="flex: 1; padding: 10px 2px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; font-size: 0.72rem; min-width: 0; text-align: center;">Kategori</button>
-                <button class="settings-tab-btn" onclick="switchSettingsTab('settings-tab-sync')" style="flex: 1; padding: 10px 2px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; font-size: 0.72rem; min-width: 0; text-align: center;">Google Sync</button>
+            <div class="settings-tabs">
+                <button class="settings-tab-btn active" onclick="switchSettingsTab('settings-tab-display')">Tampilan</button>
+                <button class="settings-tab-btn" onclick="switchSettingsTab('settings-tab-currency')">Mata Uang</button>
+                <button class="settings-tab-btn" onclick="switchSettingsTab('settings-tab-categories')">Kategori</button>
+                <button class="settings-tab-btn" onclick="switchSettingsTab('settings-tab-sync')">Google Sync</button>
             </div>
 
             <!-- Tab Content 1: Tampilan -->
@@ -229,9 +226,9 @@
                             <option value="income">Pemasukan</option>
                         </select>
                         <select id="settings-new-cat-group" style="flex: 1.2; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); font-size: 0.85rem; min-width: 140px; box-sizing: border-box;">
-                            <option value="needs">🏠 50% Needs (Kebutuhan)</option>
-                            <option value="wants" selected>🎮 30% Wants (Keinginan)</option>
-                            <option value="savings">💎 20% Savings (Tabungan)</option>
+                            <option value="needs">🏠 Kebutuhan Pokok (Needs)</option>
+                            <option value="wants" selected>🎮 Keinginan (Wants)</option>
+                            <option value="savings">💎 Tabungan & Investasi</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 10px;">
@@ -463,25 +460,8 @@
                 <label>Pilih Metode Budgeting Utama</label>
                 <select id="setup-budget-mode" onchange="toggleBudgetSetupFields()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-main);">
                     <option value="envelope">Envelope System (Batas Per Kategori Spesifik)</option>
-                    <option value="50_30_20">Metode 50/30/20 (Kebutuhan / Keinginan / Tabungan)</option>
                     <option value="custom">Custom Budget (Bebas Tentukan Total)</option>
                 </select>
-            </div>
-
-            <!-- 50/30/20 Fields -->
-            <div id="setup-503020-fields" style="display: none; background: var(--bg); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border);">
-                <div class="form-group">
-                    <label>Total Pendapatan / Anggaran Bulanan (Rp)</label>
-                    <input type="text" id="setup-503020-total" placeholder="0" oninput="formatCurrencyInput(this)">
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
-                    💡 Sistem akan otomatis mengalokasikan:
-                    <ul style="margin: 4px 0 0 16px; padding: 0;">
-                        <li><b>50% Needs (Kebutuhan Pokok)</b>: Makanan, Belanja Kebutuhan (Sembako), Transportasi, Tagihan</li>
-                        <li><b>30% Wants (Keinginan & Lifestyle)</b>: Belanja Keinginan (Fashion/Gadget), Hiburan, Hobi</li>
-                        <li><b>20% Savings (Tabungan/Investasi)</b>: Tabungan & Portofolio</li>
-                    </ul>
-                </div>
             </div>
 
             <!-- Envelope Categories Fields -->
@@ -789,7 +769,7 @@
 
                 <div class="modal-actions" style="margin-top: 15px;">
                     <button type="button" onclick="closeDebtPaymentModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
-                    <button type="submit" class="btn btn-primary" style="margin: 0; background: var(--purple);">Proses Pembayaran</button>
+                    <button type="submit" class="btn btn-primary" style="margin: 0;">Proses Pembayaran</button>
                 </div>
             </form>
         </div>
@@ -1006,7 +986,7 @@
 
                 <div class="modal-actions" style="margin-top: 20px;">
                     <button type="button" onclick="closeTransactionModal()" class="btn btn-modal-cancel" style="margin: 0;">Batal</button>
-                    <button type="button" onclick="addTransaction()" class="btn btn-primary" style="margin: 0; background: linear-gradient(135deg, var(--purple) 0%, #6366f1 100%);">Simpan Transaksi</button>
+                    <button type="button" onclick="addTransaction()" class="btn btn-primary" style="margin: 0;">Simpan Transaksi</button>
                 </div>
             </div>
         </div>
@@ -1070,8 +1050,10 @@
 
     <div class="container">
         <!-- GLOBAL FILTER CARD (Visible in History & Cashflow views) -->
-        <div id="global-filter-card" class="card" style="display: none; margin-bottom: 20px;">
-            <h3 style="margin-bottom: 12px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Filter Transaksi & Laporan</h3>
+        <div id="global-filter-card" class="card apple-filter-card" style="display: none; margin-bottom: 18px;">
+            <div class="apple-filter-header">
+                <span class="apple-filter-badge">🔍 Filter & Periode Data</span>
+            </div>
             <div class="filter-container">
                 <div class="filter-item">
                     <label>Periode Waktu</label>
@@ -1090,35 +1072,160 @@
             </div>
         </div>
 
-        <!-- VIEW 1: DASHBOARD -->
+        <!-- VIEW 1: DASHBOARD (MATERIAL YOU / GOOGLE WALLET LAYOUT) -->
         <div id="view-dashboard" class="app-view active visible">
-            <div class="header-title-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-                <div class="header-title" style="margin-bottom: 0;">
-                    <h1>Dashboard Keuangan</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Catat Transaksi Keuangan Anda di Transaksiku.</p>
+
+            <!-- 1. TOP GREETING & DATE HEADER -->
+            <div class="m3-dashboard-header">
+                <div class="m3-greeting-col">
+                    <span class="m3-date-chip" id="m3-date-chip">Hari Ini</span>
+                    <h2 class="m3-greeting-text" id="m3-greeting-text">Selamat Datang 👋</h2>
                 </div>
-                <button id="btn-toggle-balances" class="btn-hide-balances" onclick="toggleHideBalances()" title="Sembunyikan/Tampilkan Saldo">
-                    <span id="eye-icon" style="display: inline-flex; align-items: center; justify-content: center;"></span> <span id="eye-text">Sembunyikan Saldo</span>
+                <div class="m3-header-actions">
+                    <button id="btn-toggle-balances" class="m3-privacy-pill" onclick="toggleHideBalances()" title="Sembunyikan/Tampilkan Saldo">
+                        <span id="eye-icon"></span> <span id="eye-text">Sembunyikan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. EXPRESSIVE BALANCE HERO CANVAS -->
+            <div class="m3-hero-card" id="card-total-wealth">
+                <div class="m3-hero-top-tag">
+                    <span class="m3-tag-dot"></span>
+                    <span>TOTAL SALDO BERSIH</span>
+                </div>
+                
+                <div class="m3-hero-balance-wrap">
+                    <h1 id="sum-total" class="m3-hero-balance">Rp 0</h1>
+                </div>
+
+                <!-- SUB-METRICS: 2 TONAL TILES SEJAJAR -->
+                <div class="m3-hero-sub-grid">
+                    <div class="m3-sub-card" id="card-active-cash">
+                        <div class="m3-sub-card-header">
+                            <span class="m3-sub-dot cash"></span>
+                            <span class="m3-sub-label">Kas & Rekening</span>
+                        </div>
+                        <h3 id="sum-cash" class="m3-sub-val">Rp 0</h3>
+                    </div>
+                    <div class="m3-sub-card" id="card-total-portfolio">
+                        <div class="m3-sub-card-header">
+                            <span class="m3-sub-dot invest"></span>
+                            <span class="m3-sub-label">Tabungan & Investasi</span>
+                        </div>
+                        <h3 id="sum-portfolio" class="m3-sub-val">Rp 0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. GOOGLE WALLET 4-COLUMN CIRCULAR QUICK ACTION BAR -->
+            <div class="m3-quick-actions-grid">
+                <button type="button" onclick="openTransactionModal()" class="m3-action-item">
+                    <div class="m3-action-circle primary">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </div>
+                    <span class="m3-action-label">Catat</span>
+                </button>
+                <button type="button" onclick="openTransferModalShortcut()" class="m3-action-item">
+                    <div class="m3-action-circle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+                    </div>
+                    <span class="m3-action-label">Transfer</span>
+                </button>
+                <button type="button" onclick="navigateTo('budget')" class="m3-action-item">
+                    <div class="m3-action-circle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    </div>
+                    <span class="m3-action-label">Anggaran</span>
+                </button>
+                <button type="button" onclick="navigateTo('debt')" class="m3-action-item">
+                    <div class="m3-action-circle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    </div>
+                    <span class="m3-action-label">Hutang</span>
                 </button>
             </div>
 
-            <div class="summary-grid">
-                <div class="summary-card total" id="card-total-wealth">
-                    <p>Total Aset & Kekayaan</p>
-                    <h2 id="sum-total">Rp 0</h2>
+            <!-- 4. AKUN & DOMPET HORIZONTAL CARD CAROUSEL -->
+            <div class="card m3-wallet-section" style="margin-top: 18px; padding: 18px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700;">Dompet & Rekening</h3>
+                        <span style="font-size: 0.74rem; color: var(--text-muted);">Kartu digital aktif Anda</span>
+                    </div>
+                    <button onclick="toggleAddWalletForm()" class="btn-m3-add-wallet" title="+ Tambah Dompet Baru">
+                        <span>➕</span> Tambah
+                    </button>
                 </div>
-                <div class="summary-card cash" id="card-active-cash">
-                    <p>Total Kas Aktif</p>
-                    <h2 id="sum-cash">Rp 0</h2>
-                </div>
-                <div class="summary-card invest" id="card-total-portfolio">
-                    <p>Total Tabungan & Investasi</p>
-                    <h2 id="sum-portfolio">Rp 0</h2>
+                <div id="wallet-list" class="m3-wallet-cards-deck"></div>
+
+                <div id="add-wallet-container" style="display: none; margin-top: 14px; padding: 14px; background: var(--bg); border-radius: 18px; border: 1px solid var(--border);">
+                    <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1.8; min-width: 110px;">
+                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Nama Akun</label>
+                            <input type="text" id="new-wallet-name" placeholder="Misal: BCA, OVO" style="padding: 8px 10px; font-size: 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 1.2; min-width: 90px;">
+                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Jenis</label>
+                            <select id="new-wallet-type" style="padding: 8px 10px; font-size: 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%;">
+                                <option value="cash">Kas / Bank</option>
+                                <option value="invest">Investasi</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1.4; min-width: 100px;">
+                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Saldo Awal</label>
+                            <input type="text" id="new-wallet-balance" placeholder="0" oninput="formatCurrencyInput(this)" style="padding: 8px 10px; font-size: 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 0.8; min-width: 70px;">
+                            <button onclick="addWallet()" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.78rem; border-radius: 9999px; width: 100%; font-weight: 700; height: 38px; display: flex; align-items: center; justify-content: center;">Simpan</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- DASHBOARD BUDGET WIDGET -->
-            <div class="card" style="margin-top: 15px; margin-bottom: 15px; border: 1px solid var(--accent); background: var(--card); padding: 16px;">
+            <!-- 5. DASHBOARD CASH MOVEMENT LINE CHART CARD -->
+            <div class="card dashboard-chart-card" id="card-dashboard-cash-chart" style="margin-top: 18px; margin-bottom: 18px; padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.1rem;">📈</span>
+                            <h4 style="margin: 0; font-size: 1rem; color: var(--text-main); font-weight: 700;">Tren Pergerakan Saldo</h4>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                            <span id="dashboard-chart-pct-badge" class="apple-trend-pill positive">↗ +0.0%</span>
+                            <span id="dashboard-chart-nominal-sub" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Rp 0 periode ini</span>
+                        </div>
+                    </div>
+
+                    <!-- RANGE FILTER PILLS -->
+                    <div class="apple-chart-range-switcher" id="dashboard-chart-range-switcher">
+                        <button type="button" class="chart-range-btn" onclick="setDashboardChartRange(7, this)">7 Hari</button>
+                        <button type="button" class="chart-range-btn active" onclick="setDashboardChartRange(30, this)">30 Hari</button>
+                        <button type="button" class="chart-range-btn" onclick="setDashboardChartRange('all', this)">Semua</button>
+                    </div>
+                </div>
+
+                <!-- CHART CANVAS -->
+                <div class="dashboard-line-chart-container" style="position: relative; height: 185px; width: 100%;">
+                    <canvas id="cashMovementChart"></canvas>
+                </div>
+
+                <!-- SUB-INFO: TOTAL MASUK & KELUAR PERIODE INI -->
+                <div class="dashboard-chart-subgrid">
+                    <div class="dashboard-chart-subitem">
+                        <span class="sub-label">🟢 Total Uang Masuk</span>
+                        <span id="dashboard-chart-total-in" class="sub-val" style="color: var(--success);">Rp 0</span>
+                    </div>
+                    <div class="dashboard-chart-subdivider"></div>
+                    <div class="dashboard-chart-subitem">
+                        <span class="sub-label">🔴 Total Uang Keluar</span>
+                        <span id="dashboard-chart-total-out" class="sub-val" style="color: var(--danger);">Rp 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. DASHBOARD BUDGET WIDGET -->
+            <div class="card dashboard-budget-card" style="margin-top: 18px; margin-bottom: 18px; padding: 18px 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 1.1rem;">🎯</span>
@@ -1133,91 +1240,119 @@
                 </div>
             </div>
 
-            <!-- WALLET LIST & ACCOUNTS PANEL -->
-            <div class="card" style="margin-top: 15px;">
+            <!-- 7. TRANSAKSI TERAKHIR (RECENT TRANSACTIONS PREVIEW ON DASHBOARD) -->
+            <div class="card m3-recent-card" style="margin-top: 18px; margin-bottom: 24px; padding: 18px 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Daftar Akun & Dompet</h3>
-                    <button onclick="toggleAddWalletForm()" class="btn btn-outline" style="width: 32px; height: 32px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800; border-color: var(--accent); color: var(--accent);" title="+ Tambah Dompet Baru">➕</button>
-                </div>
-                <div id="wallet-list"></div>
-
-                <div id="add-wallet-container" style="display: none; margin-top: 10px; padding: 10px 12px; background: var(--bg); border-radius: 10px; border: 1px solid var(--border);">
-                    <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
-                        <div style="flex: 1.8; min-width: 110px;">
-                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Nama Akun</label>
-                            <input type="text" id="new-wallet-name" placeholder="Misal: BCA, OVO" style="padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%; box-sizing: border-border;">
-                        </div>
-                        <div style="flex: 1.2; min-width: 90px;">
-                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Jenis</label>
-                            <select id="new-wallet-type" style="padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%;">
-                                <option value="cash">Kas / Bank</option>
-                                <option value="invest">Investasi</option>
-                            </select>
-                        </div>
-                        <div style="flex: 1.4; min-width: 100px;">
-                            <label style="font-size: 0.72rem; margin-bottom: 3px; display: block; color: var(--text-muted); font-weight: 600;">Saldo Awal</label>
-                            <input type="text" id="new-wallet-balance" placeholder="0" oninput="formatCurrencyInput(this)" style="padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); width: 100%; box-sizing: border-border;">
-                        </div>
-                        <div style="flex: 0.8; min-width: 70px;">
-                            <button onclick="addWallet()" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.78rem; border-radius: 6px; width: 100%; font-weight: 700; height: 32px; display: flex; align-items: center; justify-content: center;">Simpan</button>
-                        </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.1rem;">⚡</span>
+                        <h4 style="margin: 0; font-size: 1rem; color: var(--text-main); font-weight: 700;">Transaksi Terakhir</h4>
                     </div>
+                    <button onclick="navigateTo('history')" style="background: none; border: none; color: var(--accent); font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                        Lihat Semua →
+                    </button>
+                </div>
+                <div id="dashboard-recent-transactions-list" class="m3-recent-list">
+                    <!-- Dinamis via JS -->
                 </div>
             </div>
+
         </div>
 
         <!-- VIEW 2: RIWAYAT TRANSAKSI -->
         <div id="view-history" class="app-view" style="display: none;">
-            <div class="header-title">
+            <div class="header-title" style="margin-bottom: 16px;">
                 <h1>Riwayat Keuangan</h1>
                 <p style="color: var(--text-muted);">Semua riwayat transaksi finansial yang Anda catat.</p>
             </div>
-            <div id="history-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;"></div>
+
+            <!-- APPLE SEGMENTED CONTROL TYPE FILTER -->
+            <div class="history-type-filter-switcher" id="history-type-filter-switcher">
+                <button type="button" class="history-type-tab-btn active" onclick="setHistoryTypeFilter('all', this)">Semua</button>
+                <button type="button" class="history-type-tab-btn" onclick="setHistoryTypeFilter('expense', this)">💸 Pengeluaran</button>
+                <button type="button" class="history-type-tab-btn" onclick="setHistoryTypeFilter('income', this)">💰 Pemasukan</button>
+                <button type="button" class="history-type-tab-btn" onclick="setHistoryTypeFilter('transfer', this)">🔄 Mutasi</button>
+            </div>
+
+            <div id="history-list" style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
 
         <!-- VIEW 3: LAPORAN ARUS KAS -->
         <div id="view-cashflow" class="app-view" style="display: none;">
-            <div class="header-title-container" style="margin-bottom: 20px;">
+            <div class="header-title-container" style="margin-bottom: 16px;">
                 <div class="header-title" style="margin-bottom: 0;">
                     <h1>Laporan</h1>
                     <p style="color: var(--text-muted); font-size: 0.9rem;">Analisis mendalam mengenai pemasukan, pengeluaran, dan portofolio Anda.</p>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="metrics-grid-2">
-                    <div class="metric-box">
-                        <button class="metric-info-btn" onclick="showMetricInfo('income', event)" onmouseenter="showMetricInfo('income', event)" onmouseleave="hideMetricInfo('income', event)">?</button>
-                        <p>Pemasukan</p>
-                        <h3 id="metric-income" style="color: var(--success);">Rp 0</h3>
+            <!-- APPLE TITANIUM HERO CARD FOR CASHFLOW (ALL 4 METRICS SEJAJAR) -->
+            <div class="apple-hero-card" id="cashflow-summary-hero-card">
+                <div class="apple-hero-card-header">
+                    <div class="apple-hero-brand-tag">
+                        <span class="apple-chip-icon">📊</span>
+                        <span>ANALISIS ARUS KAS</span>
                     </div>
-                    <div class="metric-box">
-                        <button class="metric-info-btn" onclick="showMetricInfo('expense', event)" onmouseenter="showMetricInfo('expense', event)" onmouseleave="hideMetricInfo('expense', event)">?</button>
-                        <p>Pengeluaran</p>
-                        <h3 id="metric-expense" style="color: var(--danger);">Rp 0</h3>
-                    </div>
+                    <span id="cashflow-net-badge" class="apple-status-pill neutral">Seimbang</span>
+                </div>
+                
+                <div class="apple-hero-balance-wrap">
+                    <span class="apple-hero-label">Surplus / Defisit Kas Bersih</span>
+                    <h1 id="cashflow-net-hero" class="apple-hero-balance">Rp 0</h1>
+                    <!-- Hidden Fallbacks for Legacy Script Safety -->
                     <span id="metric-net" style="display: none;">Rp 0</span>
+                    <span id="metric-income" style="display: none;">Rp 0</span>
+                    <span id="metric-expense" style="display: none;">Rp 0</span>
+                    <span id="metric-outstanding-debt" style="display: none;">Rp 0</span>
+                    <span id="metric-ratio" style="display: none;">0%</span>
+                    <div id="outstanding-debt-box" style="display: none;"></div>
+                    <div id="ratio-box" style="display: none;"></div>
                 </div>
 
-                <div class="metrics-grid-2">
-                    <div class="metric-box" id="outstanding-debt-box" style="border-color: var(--purple); background: #f5f3ff;">
-                        <button class="metric-info-btn" onclick="showMetricInfo('outstanding_debt', event)" onmouseenter="showMetricInfo('outstanding_debt', event)" onmouseleave="hideMetricInfo('outstanding_debt', event)">i</button>
-                        <p>Sisa Total Hutang</p>
-                        <h3 id="metric-outstanding-debt" style="color: var(--purple);">Rp 0</h3>
-                        <p id="metric-debt-taken-period" style="font-size: 0.75rem; margin-top: 5px; color: var(--text-muted); font-weight: 500;">Diambil Periode Ini: Rp 0</p>
+                <!-- 4 METRIK SEJAJAR: PEMASUKAN, PENGELUARAN, SISA HUTANG, RASIO DTA -->
+                <div class="apple-hero-sub-grid apple-cashflow-quad-grid">
+                    <div class="apple-sub-item">
+                        <div class="apple-sub-header">
+                            <span class="apple-sub-label">💰 Pemasukan</span>
+                            <button class="apple-metric-info-btn" onclick="showMetricInfo('income', event)" title="Info Pemasukan">?</button>
+                        </div>
+                        <h3 id="cashflow-income-hero" class="apple-sub-val" style="color: #34d399;">Rp 0</h3>
                     </div>
-                    <div class="metric-box" id="ratio-box">
-                        <button class="metric-info-btn" onclick="showMetricInfo('dta_ratio', event)" onmouseenter="showMetricInfo('dta_ratio', event)" onmouseleave="hideMetricInfo('dta_ratio', event)">!</button>
-                        <p>Rasio Hutang (DTA)</p>
-                        <h3 id="metric-ratio">0%</h3>
-                        <p id="ratio-desc" style="font-size: 0.75rem; margin-top: 5px;">Sangat Sehat</p>
+                    <div class="apple-sub-divider"></div>
+                    <div class="apple-sub-item">
+                        <div class="apple-sub-header">
+                            <span class="apple-sub-label">💸 Pengeluaran</span>
+                            <button class="apple-metric-info-btn" onclick="showMetricInfo('expense', event)" title="Info Pengeluaran">?</button>
+                        </div>
+                        <h3 id="cashflow-expense-hero" class="apple-sub-val" style="color: #f87171;">Rp 0</h3>
+                    </div>
+                    <div class="apple-sub-divider"></div>
+                    <div class="apple-sub-item">
+                        <div class="apple-sub-header">
+                            <span class="apple-sub-label">🟣 Sisa Hutang</span>
+                            <button class="apple-metric-info-btn" onclick="showMetricInfo('outstanding_debt', event)" title="Info Sisa Hutang">i</button>
+                        </div>
+                        <h3 id="cashflow-debt-hero" class="apple-sub-val" style="color: #c084fc;">Rp 0</h3>
+                        <span id="cashflow-debt-period-sub" style="font-size: 0.68rem; color: rgba(255, 255, 255, 0.6); display: block; margin-top: 2px;">Diambil: Rp 0</span>
+                        <span id="metric-debt-taken-period" style="display: none;">Diambil Periode Ini: Rp 0</span>
+                    </div>
+                    <div class="apple-sub-divider"></div>
+                    <div class="apple-sub-item">
+                        <div class="apple-sub-header">
+                            <span class="apple-sub-label">⚖️ Rasio DTA</span>
+                            <button class="apple-metric-info-btn" onclick="showMetricInfo('dta_ratio', event)" title="Info Rasio Hutang (DTA)">!</button>
+                        </div>
+                        <h3 id="cashflow-dta-hero" class="apple-sub-val" style="color: #38bdf8;">0%</h3>
+                        <span id="cashflow-dta-desc-sub" style="font-size: 0.68rem; color: #34d399; font-weight: 600; display: block; margin-top: 2px;">Sangat Sehat</span>
+                        <span id="ratio-desc" style="display: none;">Sangat Sehat</span>
                     </div>
                 </div>
+            </div>
 
+            <div class="card" style="padding: 22px;">
                 <!-- Chart Switcher Tabs -->
-                <div class="report-tabs-switcher" style="display: flex; gap: 8px; margin-bottom: 20px; background: var(--bg); padding: 4px; border-radius: 12px; border: 1px solid var(--border);">
-                    <button id="btn-report-dist" onclick="switchReportTab('dist')" style="flex: 1; padding: 8px 12px; border: none; background: var(--card); color: var(--text-main); font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 0.85rem; font-family: 'Inter', sans-serif;">📊 Distribusi Kategori</button>
-                    <button id="btn-report-comp" onclick="switchReportTab('comp')" style="flex: 1; padding: 8px 12px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-size: 0.85rem; font-family: 'Inter', sans-serif;">📈 Perbandingan Periode</button>
+                <div class="report-tabs-switcher">
+                    <button id="btn-report-dist" class="active" onclick="switchReportTab('dist')">📊 Distribusi Kategori</button>
+                    <button id="btn-report-comp" onclick="switchReportTab('comp')">📈 Perbandingan Periode</button>
                 </div>
 
                 <div id="report-tab-dist-container" class="report-tab-panel" style="margin-bottom: 25px;">
@@ -1234,70 +1369,87 @@
                     </div>
                 </div>
 
-                <div class="split-grid">
-                    <div>
-                        <h4 style="margin-bottom: 15px; color: var(--danger); border-bottom: 2px solid var(--danger); padding-bottom: 5px;">Laporan Pengeluaran per Kategori:</h4>
-                        <div id="cashflow-expense-list"></div>
+                <div class="split-grid cashflow-breakdown-grid">
+                    <div class="cashflow-column-card">
+                        <div class="cashflow-column-header">
+                            <span class="cashflow-column-pill expense-pill">💸 Pengeluaran</span>
+                            <span class="cashflow-column-title">Per Kategori</span>
+                        </div>
+                        <div id="cashflow-expense-list" class="cashflow-list-wrap"></div>
                     </div>
-                    <div>
-                        <h4 style="margin-bottom: 15px; color: var(--success); border-bottom: 2px solid var(--success); padding-bottom: 5px;">Rincian Pemasukan:</h4>
-                        <div id="cashflow-income-list"></div>
+                    <div class="cashflow-column-card">
+                        <div class="cashflow-column-header">
+                            <span class="cashflow-column-pill income-pill">💰 Pemasukan</span>
+                            <span class="cashflow-column-title">Rincian Sumber</span>
+                        </div>
+                        <div id="cashflow-income-list" class="cashflow-list-wrap"></div>
 
-                        <h4 style="margin-top: 25px; margin-bottom: 15px; color: var(--purple); border-bottom: 2px solid var(--purple); padding-bottom: 5px;">Rincian Pinjaman Diambil:</h4>
-                        <div id="cashflow-debt-list"></div>
+                        <div class="cashflow-column-header" style="margin-top: 22px;">
+                            <span class="cashflow-column-pill debt-pill">🟣 Pinjaman Baru</span>
+                            <span class="cashflow-column-title">Diambil Periode Ini</span>
+                        </div>
+                        <div id="cashflow-debt-list" class="cashflow-list-wrap"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- VIEW 4: MANAGEMENT & LAPORAN HUTANG -->
+        <!-- VIEW 4: MANAGEMENT & LAPORAN HUTANG & PIUTANG -->
         <div id="view-debt" class="app-view" style="display: none;">
             <div class="header-title-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
                 <div class="header-title" style="margin-bottom: 0;">
-                    <h1>Manajemen & Pelunasan Hutang</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Kelola kewajiban hutang, cicilan bulanan, dan jadwal jatuh tempo secara teratur.</p>
+                    <h1 id="debt-rec-main-title">Manajemen & Pelunasan Hutang</h1>
+                    <p id="debt-rec-main-desc" style="color: var(--text-muted); font-size: 0.9rem;">Kelola kewajiban hutang, cicilan bulanan, dan jadwal jatuh tempo secara teratur.</p>
                 </div>
-                <button onclick="openDebtModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px; background: var(--purple);">
-                    ➕ Tambah Hutang Baru
+                <div id="debt-rec-action-btns">
+                    <button id="btn-add-debt" onclick="openDebtModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px;">
+                        ➕ Tambah Hutang Baru
+                    </button>
+                    <button id="btn-add-receivable" onclick="openReceivableModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px; display: none;">
+                        ➕ Tambah Piutang Baru
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Switcher: Catatan Hutang vs Catatan Piutang -->
+            <div class="debt-rec-tab-switcher">
+                <button id="btn-tab-debt" class="budget-tab-btn active" onclick="switchDebtRecTab('debt')">
+                    💳 Catatan Hutang
+                </button>
+                <button id="btn-tab-receivable" class="budget-tab-btn" onclick="switchDebtRecTab('receivable')">
+                    🤝 Catatan Piutang
                 </button>
             </div>
 
-            <!-- DEBT SUMMARY HERO CARD -->
-            <div id="debt-summary-hero-card" class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%); border: 1px solid rgba(168, 85, 247, 0.3);">
-                <!-- Dinamis via renderDebtView() -->
-            </div>
-
-            <!-- MONTHLY DUE ALERT BANNER -->
-            <div id="debt-due-alert-banner" style="margin-bottom: 20px;">
-                <!-- Dinamis via renderDebtView() -->
-            </div>
-
-            <!-- DEBT CARDS GRID -->
-            <div id="debt-cards-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px;">
-                <!-- Dinamis via renderDebtView() -->
-            </div>
-        </div>
-
-        <!-- VIEW 5: MANAGEMENT & LAPORAN PIUTANG -->
-        <div id="view-receivables" class="app-view" style="display: none;">
-            <div class="header-title-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-                <div class="header-title" style="margin-bottom: 0;">
-                    <h1>Manajemen & Pelunasan Piutang</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Pantau uang Anda yang dipinjam orang lain dan riwayat pelunasannya.</p>
+            <!-- SECTION 1: HUTANG -->
+            <div id="debt-rec-section-debt">
+                <!-- DEBT SUMMARY HERO CARD -->
+                <div id="debt-summary-hero-card" class="card" style="margin-bottom: 20px;">
+                    <!-- Dinamis via renderDebtView() -->
                 </div>
-                <button onclick="openReceivableModal()" class="btn btn-primary" style="margin: 0; width: auto; font-size: 0.85rem; padding: 10px 16px; background: var(--success);">
-                    ➕ Tambah Piutang Baru
-                </button>
+
+                <!-- MONTHLY DUE ALERT BANNER -->
+                <div id="debt-due-alert-banner" style="margin-bottom: 20px;">
+                    <!-- Dinamis via renderDebtView() -->
+                </div>
+
+                <!-- DEBT CARDS GRID -->
+                <div id="debt-cards-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px;">
+                    <!-- Dinamis via renderDebtView() -->
+                </div>
             </div>
 
-            <!-- RECEIVABLES SUMMARY HERO CARD -->
-            <div id="receivables-summary-hero-card" class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(52, 211, 153, 0.1) 100%); border: 1px solid rgba(16, 185, 129, 0.3);">
-                <!-- Dinamis via renderReceivablesView() -->
-            </div>
+            <!-- SECTION 2: PIUTANG -->
+            <div id="debt-rec-section-receivable" style="display: none;">
+                <!-- RECEIVABLES SUMMARY HERO CARD -->
+                <div id="receivables-summary-hero-card" class="card" style="margin-bottom: 20px;">
+                    <!-- Dinamis via renderReceivablesView() -->
+                </div>
 
-            <!-- RECEIVABLES CARDS GRID -->
-            <div id="receivables-cards-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px;">
-                <!-- Dinamis via renderReceivablesView() -->
+                <!-- RECEIVABLES CARDS GRID -->
+                <div id="receivables-cards-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px;">
+                    <!-- Dinamis via renderReceivablesView() -->
+                </div>
             </div>
         </div>
 
@@ -1305,6 +1457,12 @@
         <div id="view-budget" class="app-view">
             <div class="header-title-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
                 <div class="header-title" style="margin-bottom: 0;">
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="navigateTo('dashboard')" class="btn btn-outline" style="padding: 4px 12px; font-size: 0.78rem; border-radius: 8px; font-weight: 700; border-color: var(--border); color: var(--text-muted); width: auto; display: inline-flex; align-items: center; gap: 6px; margin: 0; background: var(--card); cursor: pointer;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            Kembali ke Beranda
+                        </button>
+                    </div>
                     <h1 id="budget-main-title">Manajemen & Batas Anggaran</h1>
                     <p id="budget-main-desc" style="color: var(--text-muted); font-size: 0.9rem;">Kendalikan pengeluaran bulanan Anda secara proaktif & disiplin.</p>
                 </div>
@@ -1319,11 +1477,11 @@
             </div>
 
             <!-- Main Tab Switcher: Pengeluaran vs Target Tabungan -->
-            <div class="budget-main-tab-switcher" style="display: flex; gap: 8px; margin-bottom: 20px; background: var(--card); padding: 6px; border-radius: 12px; border: 1px solid var(--border);">
-                <button id="btn-budget-tab-expenses" class="budget-tab-btn active" onclick="switchBudgetSection('expenses')" style="flex: 1; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; background: var(--accent); color: white;">
+            <div class="budget-main-tab-switcher">
+                <button id="btn-budget-tab-expenses" class="budget-tab-btn active" onclick="switchBudgetSection('expenses')">
                     💸 Anggaran Pengeluaran
                 </button>
-                <button id="btn-budget-tab-savings" class="budget-tab-btn" onclick="switchBudgetSection('savings')" style="flex: 1; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--text-muted);">
+                <button id="btn-budget-tab-savings" class="budget-tab-btn" onclick="switchBudgetSection('savings')">
                     🎯 Target Tabungan & Impian
                 </button>
             </div>
@@ -1333,13 +1491,10 @@
                 <!-- Mode Selector Chips -->
                 <div class="budget-mode-selector">
                     <button class="budget-mode-chip active" id="chip-mode-envelope" onclick="switchBudgetMode('envelope')">
-                        ✉️ Envelope System
-                    </button>
-                    <button class="budget-mode-chip" id="chip-mode-503020" onclick="switchBudgetMode('50_30_20')">
-                        📊 Metode 50/30/20
+                        ✉️ Envelope System (Per Kategori)
                     </button>
                     <button class="budget-mode-chip" id="chip-mode-custom" onclick="switchBudgetMode('custom')">
-                        🎯 Custom Budget
+                        🎯 Custom Budget (Total Bebas)
                     </button>
                 </div>
 
@@ -1386,8 +1541,8 @@
                 </div>
 
                 <!-- Insights Disiplin Card -->
-                <div class="card" style="margin-top: 12px; padding: 12px 14px; border: 1px solid var(--purple); background: var(--card);">
-                    <h4 style="margin-bottom: 8px; color: var(--purple); border-bottom: 1.5px solid var(--purple); padding-bottom: 4px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                <div class="card" style="margin-top: 14px; padding: 16px 18px;">
+                    <h4 style="margin-bottom: 10px; color: var(--text-main); font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
                         <span>🏆 Insights Disiplin</span>
                     </h4>
                     <div id="budget-gamification-content">
@@ -1399,7 +1554,7 @@
             <!-- SECTION 2: TARGET TABUNGAN & IMPIAN -->
             <div id="budget-section-savings" style="display: none;">
                 <!-- Savings Goals Summary Card -->
-                <div id="savings-goals-summary-card" class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%); border: 1px solid rgba(139, 92, 246, 0.3);">
+                <div id="savings-goals-summary-card" class="card" style="margin-bottom: 20px;">
                     <!-- Dinamis via renderSavingsGoalsView() -->
                 </div>
 
@@ -1432,9 +1587,6 @@
         <button id="bottom-nav-history" class="bottom-nav-item" onclick="navigateTo('history')" title="Riwayat">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
         </button>
-        <button id="bottom-nav-budget" class="bottom-nav-item" onclick="navigateTo('budget')" title="Anggaran">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
-        </button>
         <button id="bottom-nav-dashboard" class="bottom-nav-item active" onclick="navigateTo('dashboard')" title="Beranda">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
         </button>
@@ -1449,11 +1601,13 @@
         <button id="bottom-nav-cashflow" class="bottom-nav-item" onclick="navigateTo('cashflow')" title="Laporan">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
         </button>
-        <button id="bottom-nav-debt" class="bottom-nav-item" onclick="navigateTo('debt')" title="Hutang">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-        </button>
-        <button id="bottom-nav-receivables" class="bottom-nav-item" onclick="navigateTo('receivables')" title="Piutang">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        <button id="bottom-nav-debt" class="bottom-nav-item" onclick="navigateTo('debt')" title="Hutang & Piutang">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="7" y1="20" x2="7" y2="4"></line>
+                <polyline points="3 8 7 4 11 8"></polyline>
+                <line x1="17" y1="4" x2="17" y2="20"></line>
+                <polyline points="13 16 17 20 21 16"></polyline>
+            </svg>
         </button>
     </div>
 

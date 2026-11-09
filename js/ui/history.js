@@ -200,6 +200,51 @@ function applyFilter() {
     if (typeof calculateCashflow === 'function') calculateCashflow();
     if (typeof renderDebtChartAndBreakdown === 'function') renderDebtChartAndBreakdown();
     if (typeof renderReceivablesChartAndBreakdown === 'function') renderReceivablesChartAndBreakdown();
+    if (typeof renderDashboardCashMovementChart === 'function') renderDashboardCashMovementChart();
+    if (typeof renderDashboardBudgetWidget === 'function') renderDashboardBudgetWidget();
+    if (typeof renderDashboardRecentTransactions === 'function') renderDashboardRecentTransactions();
+    if (typeof updateDashboardGreeting === 'function') updateDashboardGreeting();
+}
+
+// --- CATEGORY ICON MAPPING ---
+function getCategoryIcon(category, mainType) {
+    if (!category) return '📝';
+    const c = category.toLowerCase();
+    if (c.includes('makan') || c.includes('minum') || c.includes('kuliner') || c.includes('resto') || c.includes('kafe')) return '🍔';
+    if (c.includes('belanja') || c.includes('shopping') || c.includes('market') || c.includes('mall') || c.includes('supermarket')) return '🛍️';
+    if (c.includes('transport') || c.includes('bensin') || c.includes('ojol') || c.includes('gojek') || c.includes('grab') || c.includes('parkir') || c.includes('tol')) return '🚗';
+    if (c.includes('tagihan') || c.includes('listrik') || c.includes('air') || c.includes('wifi') || c.includes('pulsa') || c.includes('internet') || c.includes('pdam')) return '💡';
+    if (c.includes('gaji') || c.includes('salary') || c.includes('upah')) return '💼';
+    if (c.includes('bonus') || c.includes('tunjangan') || c.includes('thr') || c.includes('hadiah')) return '🎁';
+    if (c.includes('invest') || c.includes('saham') || c.includes('reksadana') || c.includes('crypto')) return '📈';
+    if (c.includes('kesehatan') || c.includes('obat') || c.includes('dokter') || c.includes('rs') || c.includes('klinik')) return '💊';
+    if (c.includes('hiburan') || c.includes('game') || c.includes('nonton') || c.includes('film') || c.includes('liburan') || c.includes('rekreasi')) return '🎮';
+    if (c.includes('pendidikan') || c.includes('kursus') || c.includes('sekolah') || c.includes('buku') || c.includes('kuliah')) return '🎓';
+    if (c.includes('keluarga') || c.includes('anak') || c.includes('orang tua')) return '👨‍👩‍👧';
+    if (c.includes('sedekah') || c.includes('donasi') || c.includes('zakat') || c.includes('infaq')) return '🤲';
+    if (c.includes('hutang') || c.includes('pinjaman') || c.includes('cicilan')) return '🟣';
+    if (c.includes('piutang')) return '🤝';
+    if (c.includes('transfer') || c.includes('pindah')) return '🔄';
+    if (c.includes('penarikan')) return '📥';
+    if (c.includes('saldo awal') || c.includes('koreksi')) return '⚖️';
+    if (mainType === 'income') return '💰';
+    if (mainType === 'expense') return '💸';
+    if (mainType === 'debt') return '🟣';
+    if (mainType === 'transfer') return '🔄';
+    return '📝';
+}
+
+let currentHistoryTypeFilter = 'all';
+
+function setHistoryTypeFilter(type, btnEl) {
+    currentHistoryTypeFilter = type;
+    const switcher = document.getElementById('history-type-filter-switcher');
+    if (switcher) {
+        switcher.querySelectorAll('.history-type-tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn === btnEl);
+        });
+    }
+    renderTransactions();
 }
 
 // --- RENDER TRANSACTION HISTORY & CARDS ---
@@ -209,14 +254,25 @@ function renderTransactions() {
     container.innerHTML = '';
 
     const filteredTrans = getFilteredTransactions();
-    const sortedTrans = [...filteredTrans].sort((a, b) => {
+
+    // Apply Segmented Control filter
+    let displayTrans = filteredTrans;
+    if (currentHistoryTypeFilter === 'expense') {
+        displayTrans = filteredTrans.filter(t => t.mainType === 'expense');
+    } else if (currentHistoryTypeFilter === 'income') {
+        displayTrans = filteredTrans.filter(t => t.mainType === 'income' || t.mainType === 'receivables' || t.category === 'Penarikan Investasi' || t.mainType === 'debt');
+    } else if (currentHistoryTypeFilter === 'transfer') {
+        displayTrans = filteredTrans.filter(t => t.mainType === 'transfer' || t.mainType === 'adjustment');
+    }
+
+    const sortedTrans = [...displayTrans].sort((a, b) => {
         let timeA = a.timestamp || a.id;
         let timeB = b.timestamp || b.id;
         return timeB - timeA;
     });
 
     if (sortedTrans.length === 0) {
-        container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); padding: 35px; border-radius: 16px; font-weight: 500;">Tidak ada transaksi sesuai filter yang dipilih.</div>`;
+        container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); padding: 35px; border-radius: 18px; font-weight: 500;">Tidak ada transaksi sesuai filter yang dipilih.</div>`;
         return;
     }
 
@@ -224,65 +280,74 @@ function renderTransactions() {
         let badgeClass = '';
         let valColor = '';
         let cardTypeClass = '';
+        let prefix = '';
 
         if (t.mainType === 'income') {
-            badgeClass = 'bg-green'; valColor = 'color: var(--success);'; cardTypeClass = 'income-card';
+            badgeClass = 'bg-green'; valColor = 'color: var(--success);'; cardTypeClass = 'income-card'; prefix = '+';
         } else if (t.mainType === 'expense') {
-            badgeClass = 'bg-red'; valColor = 'color: var(--danger);'; cardTypeClass = 'expense-card';
+            badgeClass = 'bg-red'; valColor = 'color: var(--danger);'; cardTypeClass = 'expense-card'; prefix = '-';
         } else if (t.mainType === 'debt') {
-            badgeClass = 'bg-purple'; valColor = 'color: var(--purple);'; cardTypeClass = 'debt-card';
+            badgeClass = 'bg-purple'; valColor = 'color: var(--purple);'; cardTypeClass = 'debt-card'; prefix = '+';
         } else if (t.mainType === 'receivables') {
-            badgeClass = 'bg-green'; valColor = 'color: var(--success);'; cardTypeClass = 'income-card';
+            badgeClass = 'bg-green'; valColor = 'color: var(--success);'; cardTypeClass = 'income-card'; prefix = '+';
         } else if (t.mainType === 'adjustment') {
             badgeClass = 'bg-gray';
-            valColor = (t.category === 'Koreksi (+)' || t.category === 'Saldo Awal') ? 'color: var(--success);' : 'color: var(--danger);';
+            const isPos = (t.category === 'Koreksi (+)' || t.category === 'Saldo Awal');
+            valColor = isPos ? 'color: var(--success);' : 'color: var(--danger);';
+            prefix = isPos ? '+' : '-';
             cardTypeClass = 'adjustment-card';
         } else if (t.category === 'Penarikan Investasi') {
             badgeClass = 'bg-green';
             valColor = 'color: var(--success); font-weight: 700;';
             cardTypeClass = 'income-card';
+            prefix = '+';
         } else {
-            badgeClass = 'bg-blue'; valColor = 'color: var(--text-main);'; cardTypeClass = 'transfer-card';
+            badgeClass = 'bg-blue'; valColor = 'color: var(--text-main);'; cardTypeClass = 'transfer-card'; prefix = '';
         }
 
         let walletDisplay = '';
-            if (t.category === 'Penarikan Investasi') {
-                walletDisplay = `📥 ${t.walletName}`;
-            } else if (t.mainType === 'transfer') {
-                walletDisplay = `🔄 ${t.walletName}`;
-            } else if (t.mainType === 'debt' && !t.walletId) {
-                walletDisplay = `💸 ${t.walletName}`;
-            } else {
-                walletDisplay = `💳 ${t.walletName}`;
-            }
+        if (t.category === 'Penarikan Investasi') {
+            walletDisplay = `📥 ${t.walletName}`;
+        } else if (t.mainType === 'transfer') {
+            walletDisplay = `🔄 ${t.walletName}`;
+        } else if (t.mainType === 'debt' && !t.walletId) {
+            walletDisplay = `💸 ${t.walletName}`;
+        } else {
+            walletDisplay = `💳 ${t.walletName}`;
+        }
 
-            const showTime = localStorage.getItem('transaksiku_show_time') !== 'false';
-            let timeHtml = '';
-            if (showTime) {
-                const tDate = new Date(t.timestamp || t.id);
-                const hrs = String(tDate.getHours()).padStart(2, '0');
-                const mins = String(tDate.getMinutes()).padStart(2, '0');
-                timeHtml = ` <span style="font-size:0.75rem; color:var(--text-muted); margin-left:6px;">⏰ ${hrs}:${mins}</span>`;
-            }
+        const showTime = localStorage.getItem('transaksiku_show_time') !== 'false';
+        let timeHtml = '';
+        if (showTime) {
+            const tDate = new Date(t.timestamp || t.id);
+            const hrs = String(tDate.getHours()).padStart(2, '0');
+            const mins = String(tDate.getMinutes()).padStart(2, '0');
+            timeHtml = ` <span style="font-size:0.75rem; color:var(--text-muted); margin-left:6px;">⏰ ${hrs}:${mins}</span>`;
+        }
 
-            container.innerHTML += `
+        const catIcon = getCategoryIcon(t.category, t.mainType);
+
+        container.innerHTML += `
             <div class="transaction-card ${cardTypeClass}">
                 <div class="t-card-header">
-                    <span class="badge ${badgeClass}">${t.category}</span>
+                    <span class="badge ${badgeClass}" style="display: inline-flex; align-items: center; gap: 5px;">
+                        <span style="font-size: 0.95rem;">${catIcon}</span>
+                        <span>${t.category}</span>
+                    </span>
                     <span class="t-card-date">${t.date}${timeHtml}</span>
                 </div>
                 <div class="t-card-body">
-                    <span class="t-card-desc">${t.desc}</span>
-                    <span class="t-card-amount" style="${valColor}">${formatRp(t.amount)}</span>
+                    <span class="t-card-desc">${t.desc || t.category}</span>
+                    <span class="t-card-amount" style="${valColor}">${prefix}${formatRp(t.amount)}</span>
                 </div>
                 <div class="t-card-footer">
                     <div class="t-card-wallet">${walletDisplay}</div>
                     <div class="t-card-actions">
-                        <button onclick="editTransaction(${t.id})" class="btn-t-action btn-t-edit">✏️ Ubah</button>
-                        <button onclick="deleteTransaction(${t.id})" class="btn-t-action btn-t-delete">🗑️ Hapus</button>
+                        <button onclick="editTransaction(${t.id})" class="btn-t-action btn-t-edit" title="Ubah Transaksi">✏️ Ubah</button>
+                        <button onclick="deleteTransaction(${t.id})" class="btn-t-action btn-t-delete" title="Hapus Transaksi">🗑️ Hapus</button>
                     </div>
                 </div>
             </div>
         `;
-        });
+    });
 }

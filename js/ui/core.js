@@ -15,6 +15,18 @@ function toggleSidebar() {
 }
 
 function navigateTo(viewId) {
+    let subTabToSwitch = null;
+    if (viewId === 'receivables') {
+        viewId = 'debt';
+        subTabToSwitch = 'receivable';
+    } else if (viewId === 'debt') {
+        subTabToSwitch = (typeof getCurrentDebtRecTab === 'function') ? getCurrentDebtRecTab() : 'debt';
+    }
+
+    if (subTabToSwitch && typeof switchDebtRecTab === 'function') {
+        switchDebtRecTab(subTabToSwitch);
+    }
+
     const currentView = document.querySelector('.app-view.active');
     const targetView = document.getElementById('view-' + viewId);
 
@@ -23,21 +35,28 @@ function navigateTo(viewId) {
     // Tampilkan/sembunyikan global filter card
     const globalFilter = document.getElementById('global-filter-card');
     if (globalFilter) {
-        if (viewId === 'dashboard' || viewId === 'debt' || viewId === 'receivables' || viewId === 'budget') {
+        if (viewId === 'dashboard' || viewId === 'debt' || viewId === 'budget') {
             globalFilter.style.display = 'none';
         } else {
             globalFilter.style.display = 'block';
         }
     }
 
+    if (viewId === 'dashboard') {
+        if (typeof renderDashboardCashMovementChart === 'function') renderDashboardCashMovementChart();
+        if (typeof renderDashboardBudgetWidget === 'function') renderDashboardBudgetWidget();
+        if (typeof renderDashboardRecentTransactions === 'function') renderDashboardRecentTransactions();
+        if (typeof updateDashboardGreeting === 'function') updateDashboardGreeting();
+    }
     if (viewId === 'budget' && typeof renderBudgetView === 'function') {
         renderBudgetView();
     }
-    if (viewId === 'debt' && typeof renderDebtView === 'function') {
-        renderDebtView();
-    }
-    if (viewId === 'receivables' && typeof renderReceivablesView === 'function') {
-        renderReceivablesView();
+    if (viewId === 'debt') {
+        if (subTabToSwitch === 'receivable' && typeof renderReceivablesView === 'function') {
+            renderReceivablesView();
+        } else if (typeof renderDebtView === 'function') {
+            renderDebtView();
+        }
     }
 
     // Update status aktif di menu bottom nav
@@ -57,8 +76,8 @@ function navigateTo(viewId) {
         backdrop.classList.remove('show');
     }
 
-    // Pemicu rendering grafik Chart.js jika beralih ke Laporan Arus Kas, Hutang, atau Piutang
-    if (viewId === 'cashflow' || viewId === 'debt' || viewId === 'receivables') {
+    // Pemicu rendering grafik Chart.js jika beralih ke Laporan Arus Kas atau Hutang & Piutang
+    if (viewId === 'cashflow' || viewId === 'debt') {
         setTimeout(() => {
             applyFilter();
         }, 300);
@@ -94,47 +113,73 @@ function toggleAddWalletForm() {
 }
 
 function toggleWalletMenu(id) {
+    const targetMenu = document.getElementById(`w-menu-${id}`);
+
+    // Tutup semua dropdown menu dompet lainnya
     document.querySelectorAll('.wallet-dropdown').forEach(el => {
-        if (el.id !== `w-menu-${id}`) el.style.display = 'none';
+        if (el !== targetMenu) el.style.display = 'none';
     });
-    const menu = document.getElementById(`w-menu-${id}`);
-    if (menu) {
-        const isHidden = menu.style.display === 'none' || menu.style.display === '';
-        if (isHidden) {
-            // Cek apakah ada ruang di bawah atau harus buka ke atas
-            const trigger = menu.previousElementSibling || menu.closest('.wallet-menu-container');
-            if (trigger) {
-                const rect = trigger.getBoundingClientRect();
-                const spaceBelow = window.innerHeight - rect.bottom;
-                const bottomNavHeight = 80; // ketinggian bottom nav
-                if (spaceBelow < 160 + bottomNavHeight) {
-                    // Buka ke atas (dropup)
-                    menu.style.top = 'auto';
-                    menu.style.bottom = '100%';
-                    menu.style.marginTop = '0';
-                    menu.style.marginBottom = '6px';
-                } else {
-                    // Buka ke bawah (default)
-                    menu.style.top = '100%';
-                    menu.style.bottom = 'auto';
-                    menu.style.marginTop = '4px';
-                    menu.style.marginBottom = '0';
-                }
-            }
-            menu.style.display = 'flex';
-            menu.style.flexDirection = 'column';
-        } else {
-            menu.style.display = 'none';
+
+    if (!targetMenu) return;
+
+    const isHidden = targetMenu.style.display === 'none' || targetMenu.style.display === '';
+    if (isHidden) {
+        // Ambil elemen tombol pemicu Opsi
+        const trigger = document.querySelector(`[data-wallet-id="${id}"] .btn-option`) || targetMenu.previousElementSibling;
+
+        // Pindahkan menu langsung ke document.body agar 100% lepas dari batasan overflow kartu
+        if (targetMenu.parentElement !== document.body) {
+            document.body.appendChild(targetMenu);
         }
+
+        if (trigger) {
+            const rect = trigger.getBoundingClientRect();
+            const menuWidth = 175;
+            let leftPos = rect.right - menuWidth;
+            if (leftPos < 12) leftPos = 12;
+            if (leftPos + menuWidth > window.innerWidth - 12) {
+                leftPos = window.innerWidth - menuWidth - 12;
+            }
+
+            const menuHeight = 220;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const bottomNavHeight = 75;
+
+            targetMenu.style.position = 'fixed';
+            targetMenu.style.zIndex = '999999';
+            targetMenu.style.left = `${leftPos}px`;
+            targetMenu.style.right = 'auto';
+            targetMenu.style.margin = '0';
+
+            if (spaceBelow < menuHeight + bottomNavHeight && rect.top > menuHeight) {
+                // Buka ke atas (dropup) jika ruang di bawah sempit
+                targetMenu.style.top = 'auto';
+                targetMenu.style.bottom = `${window.innerHeight - rect.top + 6}px`;
+            } else {
+                // Buka ke bawah (dropdown)
+                targetMenu.style.top = `${rect.bottom + 6}px`;
+                targetMenu.style.bottom = 'auto';
+            }
+        }
+
+        targetMenu.style.display = 'flex';
+        targetMenu.style.flexDirection = 'column';
+    } else {
+        targetMenu.style.display = 'none';
     }
 }
 
 // Menutup dropdown dompet jika mengklik di luar area
 document.addEventListener('click', function (e) {
-    if (!e.target.closest('.wallet-menu-container')) {
+    if (!e.target.closest('.wallet-menu-container') && !e.target.closest('.wallet-dropdown') && !e.target.closest('.btn-option')) {
         document.querySelectorAll('.wallet-dropdown').forEach(el => el.style.display = 'none');
     }
 });
+
+// Menutup dropdown otomatis jika pengguna scroll halaman agar tidak melayang di posisi usang
+window.addEventListener('scroll', function () {
+    document.querySelectorAll('.wallet-dropdown').forEach(el => el.style.display = 'none');
+}, { passive: true });
 
 // Update opsi transfer/dompet normal berdasarkan jenis transaksi yang dipilih
 function updateCategoryOptions() {
@@ -215,9 +260,36 @@ function updateSummaries() {
     if (sumTotalEl) sumTotalEl.innerText = state.hideBalancesActive ? 'Rp ••••••' : formatRp(totalCash + totalSavingsAndInvest);
     if (sumCashEl) sumCashEl.innerText = state.hideBalancesActive ? 'Rp ••••••' : formatRp(totalCash);
     if (sumPortfolioEl) sumPortfolioEl.innerText = state.hideBalancesActive ? 'Rp ••••••' : formatRp(totalSavingsAndInvest);
+
+    if (typeof renderDashboardCashMovementChart === 'function') {
+        renderDashboardCashMovementChart();
+    }
+    if (typeof renderDashboardRecentTransactions === 'function') {
+        renderDashboardRecentTransactions();
+    }
+    if (typeof updateDashboardGreeting === 'function') {
+        updateDashboardGreeting();
+    }
 }
 
+function openTransferModalShortcut() {
+    if (typeof openTransactionModal === 'function') {
+        openTransactionModal();
+        const typeSelect = document.getElementById('trans-main-type');
+        if (typeSelect) {
+            typeSelect.value = 'transfer';
+            if (typeof updateCategoryOptions === 'function') {
+                updateCategoryOptions();
+            }
+        }
+    }
+}
+window.openTransferModalShortcut = openTransferModalShortcut;
+
+let isWalletAnimating = false;
+
 function moveWallet(id, direction) {
+    if (isWalletAnimating) return;
     if (!Array.isArray(state.wallets)) return;
     const index = state.wallets.findIndex(w => w.id === id);
     if (index === -1) return;
@@ -225,16 +297,106 @@ function moveWallet(id, direction) {
     const newIndex = index + direction;
     if (newIndex < 0 || newIndex >= state.wallets.length) return;
 
+    const list = document.getElementById('wallet-list');
+    if (!list) return;
+
+    const cardA = list.querySelector(`.wallet-item[data-wallet-id="${id}"]`);
+    const targetWallet = state.wallets[newIndex];
+    const cardB = targetWallet ? list.querySelector(`.wallet-item[data-wallet-id="${targetWallet.id}"]`) : null;
+
+    if (!cardA || !cardB) {
+        // Fallback jika elemen DOM tidak ditemukan
+        const [moved] = state.wallets.splice(index, 1);
+        state.wallets.splice(newIndex, 0, moved);
+        state.wallets.forEach((w, idx) => {
+            w.order = idx;
+            w.updatedAt = Date.now();
+        });
+        saveData();
+        renderWallets();
+        return;
+    }
+
+    // Tutup semua dropdown menu
+    document.querySelectorAll('.wallet-dropdown').forEach(el => el.style.display = 'none');
+
+    // 1. FIRST: Rekam posisi awal semua kartu di dalam wallet-list
+    const allCards = Array.from(list.querySelectorAll('.wallet-item'));
+    const firstRects = new Map();
+    allCards.forEach(card => {
+        firstRects.set(card, card.getBoundingClientRect());
+    });
+
+    // 2. DOM SWAP: Pindahkan elemen kartu cardA langsung di dalam hierarki DOM
+    if (direction > 0) {
+        cardB.after(cardA);
+    } else {
+        cardB.before(cardA);
+    }
+
+    // 3. LAST: Rekam posisi akhir kartu-kartu setelah ditukar posisinya di DOM
+    const changedCards = [];
+    allCards.forEach(card => {
+        const first = firstRects.get(card);
+        const last = card.getBoundingClientRect();
+        const deltaX = first.left - last.left;
+        const deltaY = first.top - last.top;
+
+        if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+            changedCards.push({ card, deltaX, deltaY });
+        }
+    });
+
+    // 4. INVERT: Kembalikan kartu ke posisi awal secara instan (tanpa transisi)
+    isWalletAnimating = true;
+    changedCards.forEach(({ card, deltaX, deltaY }) => {
+        card.style.setProperty('transition', 'none', 'important');
+        card.style.setProperty('transform', `translate3d(${deltaX}px, ${deltaY}px, 0)`, 'important');
+        if (card === cardA) {
+            card.style.setProperty('z-index', '10', 'important');
+            card.classList.add('wallet-moving-active');
+        } else {
+            card.style.setProperty('z-index', '5', 'important');
+        }
+    });
+
+    // Update urutan di state data dan simpan secara persistent
     const [moved] = state.wallets.splice(index, 1);
     state.wallets.splice(newIndex, 0, moved);
-
     state.wallets.forEach((w, idx) => {
         w.order = idx;
         w.updatedAt = Date.now();
     });
-
     saveData();
-    renderWallets();
+
+    // Paksa reflow browser agar posisi Invert terkunci sebelum transisi Play dimulai
+    void list.offsetWidth;
+
+    // 5. PLAY: Transisikan secara sangat halus (smooth spring transition) ke posisi baru
+    requestAnimationFrame(() => {
+        const springTransition = 'transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.1), box-shadow 0.42s ease';
+        changedCards.forEach(({ card }) => {
+            card.style.setProperty('transition', springTransition, 'important');
+            card.style.setProperty('transform', 'translate3d(0, 0, 0)', 'important');
+        });
+
+        // Pastikan kartu yang dipindahkan tetap terlihat dalam viewport jika list di-scroll
+        try {
+            cardA.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        } catch (e) {}
+
+        // Selesai animasi: bersihkan inline style dan sinkronkan menu dropdown via renderWallets
+        setTimeout(() => {
+            changedCards.forEach(({ card }) => {
+                card.style.removeProperty('transition');
+                card.style.removeProperty('transform');
+                card.style.removeProperty('z-index');
+                card.classList.remove('wallet-moving-active');
+            });
+            isWalletAnimating = false;
+            renderWallets();
+        }, 440);
+    });
 }
 
 function initWalletDragAndDrop() {
@@ -368,7 +530,17 @@ function renderWallets() {
     const selectFrom = document.getElementById('trans-from');
     const selectTo = document.getElementById('trans-to');
 
+    // Hapus dropdown lama yang sempat dipindahkan ke body agar tidak tertinggal
+    document.querySelectorAll('body > .wallet-dropdown').forEach(el => el.remove());
+
     if (!list) return;
+
+    if (!list._hasScrollDropdownListener) {
+        list._hasScrollDropdownListener = true;
+        list.addEventListener('scroll', function () {
+            document.querySelectorAll('.wallet-dropdown').forEach(el => el.style.display = 'none');
+        }, { passive: true });
+    }
 
     list.innerHTML = ''; 
     if (selectSingle) selectSingle.innerHTML = ''; 
@@ -411,8 +583,8 @@ function renderWallets() {
                     <div class="wallet-menu-container">
                         <button onclick="toggleWalletMenu(${w.id})" class="btn-option">Opsi ▼</button>
                         <div id="w-menu-${w.id}" class="wallet-dropdown" style="display:none;">
-                            ${index > 0 ? `<button onclick="moveWallet(${w.id}, -1); toggleWalletMenu(${w.id})">⬆️ Naikkan Urutan</button>` : ''}
-                            ${index < state.wallets.length - 1 ? `<button onclick="moveWallet(${w.id}, 1); toggleWalletMenu(${w.id})">⬇️ Turunkan Urutan</button>` : ''}
+                            ${index > 0 ? `<button onclick="moveWallet(${w.id}, -1)">⬆️ Naikkan Urutan</button>` : ''}
+                            ${index < state.wallets.length - 1 ? `<button onclick="moveWallet(${w.id}, 1)">⬇️ Turunkan Urutan</button>` : ''}
                             <button onclick="editWalletName(${w.id}); toggleWalletMenu(${w.id})">✏️ Ubah Nama</button>
                             <button onclick="editWalletBalance(${w.id}); toggleWalletMenu(${w.id})">⚙️ Koreksi Saldo</button>
                             <button onclick="deleteWallet(${w.id}); toggleWalletMenu(${w.id})" style="color:var(--danger);">🗑️ Hapus Akun</button>
@@ -622,16 +794,16 @@ function switchSettingsTab(tabId) {
 
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
         btn.classList.remove('active');
-        btn.style.borderBottomColor = 'transparent';
-        btn.style.color = 'var(--text-muted)';
+        btn.style.borderBottomColor = '';
+        btn.style.color = '';
     });
 
     const tabButtons = Array.from(document.querySelectorAll('.settings-tab-btn'));
     const activeBtn = tabButtons.find(btn => btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${tabId}'`));
     if (activeBtn) {
         activeBtn.classList.add('active');
-        activeBtn.style.borderBottomColor = 'var(--purple)';
-        activeBtn.style.color = 'var(--purple)';
+        activeBtn.style.borderBottomColor = '';
+        activeBtn.style.color = '';
     }
 
     if (tabId === 'settings-tab-categories' && typeof renderSettingsCustomCategories === 'function') {
@@ -649,27 +821,31 @@ function switchReportTab(tabName) {
         if (distContainer) distContainer.style.display = 'block';
         if (compContainer) compContainer.style.display = 'none';
         if (btnDist) {
-            btnDist.style.background = 'var(--card)';
-            btnDist.style.color = 'var(--text-main)';
-            btnDist.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            btnDist.classList.add('active');
+            btnDist.style.background = '';
+            btnDist.style.color = '';
+            btnDist.style.boxShadow = '';
         }
         if (btnComp) {
-            btnComp.style.background = 'transparent';
-            btnComp.style.color = 'var(--text-muted)';
-            btnComp.style.boxShadow = 'none';
+            btnComp.classList.remove('active');
+            btnComp.style.background = '';
+            btnComp.style.color = '';
+            btnComp.style.boxShadow = '';
         }
     } else {
         if (distContainer) distContainer.style.display = 'none';
         if (compContainer) compContainer.style.display = 'block';
         if (btnComp) {
-            btnComp.style.background = 'var(--card)';
-            btnComp.style.color = 'var(--text-main)';
-            btnComp.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            btnComp.classList.add('active');
+            btnComp.style.background = '';
+            btnComp.style.color = '';
+            btnComp.style.boxShadow = '';
         }
         if (btnDist) {
-            btnDist.style.background = 'transparent';
-            btnDist.style.color = 'var(--text-muted)';
-            btnDist.style.boxShadow = 'none';
+            btnDist.classList.remove('active');
+            btnDist.style.background = '';
+            btnDist.style.color = '';
+            btnDist.style.boxShadow = '';
         }
 
         const filteredTrans = typeof getFilteredTransactions === 'function' ? getFilteredTransactions() : [];
@@ -712,6 +888,10 @@ function toggleTheme() {
         localStorage.setItem('transaksiku_theme', 'light');
     }
     updateThemeToggles();
+
+    if (typeof renderDashboardCashMovementChart === 'function') {
+        renderDashboardCashMovementChart();
+    }
 
     const cashflowView = document.getElementById('view-cashflow');
     const debtView = document.getElementById('view-debt');
@@ -775,6 +955,9 @@ function toggleHideBalances() {
 
     initHideBalancesUI();
     renderWallets();
+    if (typeof renderDashboardRecentTransactions === 'function') {
+        renderDashboardRecentTransactions();
+    }
     showToast(state.hideBalancesActive ? 'Saldo berhasil disembunyikan' : 'Saldo berhasil ditampilkan');
 }
 

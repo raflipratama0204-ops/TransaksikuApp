@@ -321,6 +321,9 @@ registerDataChangedCallback(() => {
     if (typeof renderReceivablesView === 'function') {
         renderReceivablesView();
     }
+    if (typeof renderDashboardRecentTransactions === 'function') {
+        renderDashboardRecentTransactions();
+    }
 });
 
 let isInitialAuthCheck = true;
@@ -434,6 +437,8 @@ console.log("DEBUG STARTUP: applyFilter start");
 applyFilter();
 console.log("DEBUG STARTUP: applyDisplaySettings start");
 applyDisplaySettings();
+if (typeof updateDashboardGreeting === 'function') updateDashboardGreeting();
+if (typeof renderDashboardRecentTransactions === 'function') renderDashboardRecentTransactions();
 handleQueryParameters();
 console.log("DEBUG STARTUP: all routines completed successfully!");
 
@@ -456,7 +461,7 @@ function handleQueryParameters() {
 }
 
 // PWA Installer checks
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
+const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || Boolean(window.navigator.standalone) || Boolean(document.referrer && document.referrer.includes('android-app://'));
 const dismissTime = localStorage.getItem('pwa_banner_dismissed_at');
 const delayToShowAgain = 3 * 24 * 60 * 60 * 1000;
 const isDismissed = dismissTime && (Date.now() - parseInt(dismissTime) < delayToShowAgain);

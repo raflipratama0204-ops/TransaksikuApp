@@ -84,14 +84,53 @@ function calculateCashflow() {
 
     const metricIncomeEl = document.getElementById('metric-income');
     const metricExpenseEl = document.getElementById('metric-expense');
-    if (metricIncomeEl) metricIncomeEl.innerText = formatRp(totalIncome + currentPeriodDebtTaken);
+    const totalEffectiveIncome = totalIncome + currentPeriodDebtTaken;
+    if (metricIncomeEl) metricIncomeEl.innerText = formatRp(totalEffectiveIncome);
     if (metricExpenseEl) metricExpenseEl.innerText = formatRp(totalExpense);
 
-    const net = totalIncome + currentPeriodDebtTaken - totalExpense;
+    const net = totalEffectiveIncome - totalExpense;
     const netEl = document.getElementById('metric-net');
     if (netEl) {
         netEl.innerText = formatRp(net);
         netEl.style.color = net < 0 ? 'var(--danger)' : (net > 0 ? 'var(--success)' : 'var(--accent)');
+    }
+
+    // Populate Cashflow Titanium Hero Card
+    const cashflowNetHero = document.getElementById('cashflow-net-hero');
+    const cashflowIncomeHero = document.getElementById('cashflow-income-hero');
+    const cashflowExpenseHero = document.getElementById('cashflow-expense-hero');
+    const cashflowNetBadge = document.getElementById('cashflow-net-badge');
+    const cashflowDebtHero = document.getElementById('cashflow-debt-hero');
+    const cashflowDebtPeriodSub = document.getElementById('cashflow-debt-period-sub');
+    const cashflowDtaHero = document.getElementById('cashflow-dta-hero');
+    const cashflowDtaDescSub = document.getElementById('cashflow-dta-desc-sub');
+
+    if (cashflowNetHero) {
+        cashflowNetHero.innerText = formatRp(net);
+        if (net > 0) {
+            cashflowNetHero.style.color = '#34d399';
+        } else if (net < 0) {
+            cashflowNetHero.style.color = '#f87171';
+        } else {
+            cashflowNetHero.style.color = '#ffffff';
+        }
+    }
+    if (cashflowIncomeHero) cashflowIncomeHero.innerText = formatRp(totalEffectiveIncome);
+    if (cashflowExpenseHero) cashflowExpenseHero.innerText = formatRp(totalExpense);
+    if (cashflowDebtHero) cashflowDebtHero.innerText = formatRp(outstandingDebt);
+    if (cashflowDebtPeriodSub) cashflowDebtPeriodSub.innerText = '+ ' + formatRp(currentPeriodDebtTaken) + ' periode ini';
+
+    if (cashflowNetBadge) {
+        if (net > 0) {
+            cashflowNetBadge.className = 'apple-status-pill success';
+            cashflowNetBadge.innerText = 'Surplus +';
+        } else if (net < 0) {
+            cashflowNetBadge.className = 'apple-status-pill danger';
+            cashflowNetBadge.innerText = 'Defisit -';
+        } else {
+            cashflowNetBadge.className = 'apple-status-pill neutral';
+            cashflowNetBadge.innerText = 'Seimbang';
+        }
     }
 
     const outDebtEl = document.getElementById('metric-outstanding-debt');
@@ -105,11 +144,11 @@ function calculateCashflow() {
         if (outstandingDebt === 0) {
             outDebtEl.style.color = 'var(--success)';
             outDebtBox.style.borderColor = 'var(--success)';
-            outDebtBox.style.background = '#f0fdf4';
+            outDebtBox.style.background = 'rgba(16, 185, 129, 0.08)';
         } else {
             outDebtEl.style.color = 'var(--purple)';
             outDebtBox.style.borderColor = 'var(--purple)';
-            outDebtBox.style.background = '#f5f3ff';
+            outDebtBox.style.background = 'rgba(139, 92, 246, 0.08)';
         }
     }
 
@@ -122,37 +161,53 @@ function calculateCashflow() {
         totalAssets += w.balance;
     });
 
-    if (ratioEl && ratioBox && ratioDesc) {
-        if (totalAssets > 0) {
-            const ratio = parseFloat(((outstandingDebt / totalAssets) * 100).toFixed(1));
-            ratioEl.innerText = ratio + '%';
+    let calculatedRatioStr = '0%';
+    let calculatedRatioDesc = 'Sangat Sehat';
+    let calculatedRatioColor = '#34d399';
 
-            if (ratio > 50) {
-                ratioBox.style.borderColor = 'var(--danger)'; ratioBox.style.backgroundColor = '#fef2f2';
-                ratioEl.style.color = 'var(--danger)'; ratioDesc.style.color = 'var(--danger)';
-                ratioDesc.innerText = '⚠️ Berisiko (>50%)';
-            } else if (ratio > 30) {
-                ratioBox.style.borderColor = 'var(--warning)'; ratioBox.style.backgroundColor = '#fffbeb';
-                ratioEl.style.color = 'var(--warning)'; ratioDesc.style.color = 'var(--warning)';
-                ratioDesc.innerText = 'Batas Wajar (30%-50%)';
-            } else {
-                ratioBox.style.borderColor = 'var(--success)'; ratioBox.style.backgroundColor = '#f0fdf4';
-                ratioEl.style.color = 'var(--success)'; ratioDesc.style.color = 'var(--success)';
-                ratioDesc.innerText = 'Sangat Sehat (<30%)';
-            }
+    if (totalAssets > 0) {
+        const ratio = parseFloat(((outstandingDebt / totalAssets) * 100).toFixed(1));
+        calculatedRatioStr = ratio + '%';
+
+        if (ratio > 50) {
+            calculatedRatioDesc = '⚠️ Berisiko (>50%)';
+            calculatedRatioColor = '#f87171';
+        } else if (ratio > 30) {
+            calculatedRatioDesc = 'Batas Wajar (30%-50%)';
+            calculatedRatioColor = '#fbbf24';
         } else {
-            if (outstandingDebt > 0) {
-                ratioEl.innerText = '⚠️ Bahaya';
-                ratioBox.style.borderColor = 'var(--danger)'; ratioBox.style.backgroundColor = '#fef2f2';
-                ratioDesc.innerText = 'Ada Hutang Tanpa Aset!';
-                ratioEl.style.color = 'var(--danger)'; ratioDesc.style.color = 'var(--danger)';
-            } else {
-                ratioEl.innerText = '0%';
-                ratioBox.style.borderColor = 'var(--success)'; ratioBox.style.backgroundColor = '#f0fdf4';
-                ratioDesc.innerText = 'Sangat Sehat';
-                ratioEl.style.color = 'var(--success)'; ratioDesc.style.color = 'var(--success)';
-            }
+            calculatedRatioDesc = 'Sangat Sehat (<30%)';
+            calculatedRatioColor = '#34d399';
         }
+    } else {
+        if (outstandingDebt > 0) {
+            calculatedRatioStr = '⚠️ Bahaya';
+            calculatedRatioDesc = 'Hutang Tanpa Aset';
+            calculatedRatioColor = '#f87171';
+        } else {
+            calculatedRatioStr = '0%';
+            calculatedRatioDesc = 'Sangat Sehat';
+            calculatedRatioColor = '#34d399';
+        }
+    }
+
+    if (cashflowDtaHero) {
+        cashflowDtaHero.innerText = calculatedRatioStr;
+        cashflowDtaHero.style.color = calculatedRatioColor;
+    }
+    if (cashflowDtaDescSub) {
+        cashflowDtaDescSub.innerText = calculatedRatioDesc;
+        cashflowDtaDescSub.style.color = calculatedRatioColor;
+    }
+
+    if (ratioEl) ratioEl.innerText = calculatedRatioStr;
+    if (ratioDesc) {
+        ratioDesc.innerText = calculatedRatioDesc;
+        ratioDesc.style.color = calculatedRatioColor;
+    }
+    if (ratioBox && ratioEl) {
+        ratioBox.style.borderColor = calculatedRatioColor;
+        ratioEl.style.color = calculatedRatioColor;
     }
 
     let expenseCats = [];
@@ -167,7 +222,7 @@ function calculateCashflow() {
             <div class="flow-item">
                 <div class="flow-header">
                     <span class="flow-category">${c.name}</span>
-                    <span class="flow-amount" style="color: var(--danger)">${formatRp(c.amount)} <span style="font-size:0.8rem; color:var(--text-muted);">(${percentage}%)</span></span>
+                    <span class="flow-amount" style="color: var(--danger)">${formatRp(c.amount)} <span style="font-size:0.8rem; color:var(--text-muted); font-weight: 500;">(${percentage}%)</span></span>
                 </div>
                 <div class="flow-bar-bg">
                     <div class="flow-bar-fill" style="width: ${percentage}%; background-color: var(--danger);"></div>
@@ -177,27 +232,27 @@ function calculateCashflow() {
         expenseContainer.innerHTML += itemHtml;
         expCount++;
     });
-    if (expCount === 0) expenseContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Tidak ada pengeluaran.</p>';
+    if (expCount === 0) expenseContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.88rem; padding: 12px 0;">Tidak ada pengeluaran.</p>';
 
     let incCount = 0;
     for (let key in summary) {
         if (key.startsWith('income-')) {
             let name = key.replace('income-', '');
-            incomeContainer.innerHTML += `<div class="flow-item" style="border-bottom: 1px solid #f1f5f9; padding: 12px 0;"><div style="display:flex; justify-content:space-between;"><span class="flow-category">${name}</span><span class="flow-amount" style="color: var(--success)">${formatRp(summary[key])}</span></div></div>`;
+            incomeContainer.innerHTML += `<div class="flow-item" style="border-bottom: 1px solid var(--border); padding: 11px 0;"><div style="display:flex; justify-content:space-between; align-items:center;"><span class="flow-category">${name}</span><span class="flow-amount" style="color: var(--success); font-weight: 700;">${formatRp(summary[key])}</span></div></div>`;
             incCount++;
         }
     }
-    if (incCount === 0) incomeContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Tidak ada pemasukan.</p>';
+    if (incCount === 0) incomeContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.88rem; padding: 12px 0;">Tidak ada pemasukan.</p>';
 
     let debtCount = 0;
     for (let key in summary) {
         if (key.startsWith('debt-')) {
             let name = key.replace('debt-', '');
-            debtContainer.innerHTML += `<div class="flow-item" style="border-bottom: 1px solid #f1f5f9; padding: 12px 0;"><div style="display:flex; justify-content:space-between;"><span class="flow-category">${name}</span><span class="flow-amount" style="color: var(--purple)">${formatRp(summary[key])}</span></div></div>`;
+            debtContainer.innerHTML += `<div class="flow-item" style="border-bottom: 1px solid var(--border); padding: 11px 0;"><div style="display:flex; justify-content:space-between; align-items:center;"><span class="flow-category">${name}</span><span class="flow-amount" style="color: var(--purple); font-weight: 700;">${formatRp(summary[key])}</span></div></div>`;
             debtCount++;
         }
     }
-    if (debtCount === 0) debtContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Bersih! Tidak ada pinjaman diambil.</p>';
+    if (debtCount === 0) debtContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.88rem; padding: 12px 0;">Bersih! Tidak ada pinjaman diambil.</p>';
 
     // rendering Chart
     if (typeof Chart !== 'undefined') {
@@ -606,3 +661,77 @@ function renderReceivablesChartAndBreakdown() {
         }
     }
 }
+
+// --- DASHBOARD MATERIAL YOU / GOOGLE WALLET EXTRA HELPERS ---
+function updateDashboardGreeting() {
+    const greetingEl = document.getElementById('m3-greeting-text');
+    const dateEl = document.getElementById('m3-date-chip');
+    if (!greetingEl) return;
+
+    const hour = new Date().getHours();
+    let greet = 'Selamat Datang 👋';
+    if (hour >= 4 && hour < 11) greet = 'Selamat Pagi ☀️';
+    else if (hour >= 11 && hour < 15) greet = 'Selamat Siang 🌤️';
+    else if (hour >= 15 && hour < 18) greet = 'Selamat Sore 🌇';
+    else greet = 'Selamat Malam 🌙';
+
+    greetingEl.innerText = greet;
+
+    if (dateEl) {
+        const options = { weekday: 'long', day: 'numeric', month: 'short' };
+        dateEl.innerText = new Date().toLocaleDateString('id-ID', options);
+    }
+}
+
+function renderDashboardRecentTransactions() {
+    const container = document.getElementById('dashboard-recent-transactions-list');
+    if (!container) return;
+
+    const recent = [...(state.transactions || [])]
+        .sort((a, b) => (b.timestamp || b.id) - (a.timestamp || a.id))
+        .slice(0, 4);
+
+    if (recent.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 18px 10px; color: var(--text-muted); font-size: 0.84rem;">
+                Belum ada transaksi tercatat. Mulai dengan tombol <strong>"Catat"</strong> di atas! ✍️
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    recent.forEach(t => {
+        const isExp = t.mainType === 'expense';
+        const isInc = t.mainType === 'income';
+        const isTrf = t.mainType === 'transfer';
+        const isDebt = t.mainType === 'debt';
+
+        let color = 'var(--text-main)';
+        let sign = '';
+        if (isExp) { color = 'var(--danger)'; sign = '- '; }
+        else if (isInc) { color = 'var(--success)'; sign = '+ '; }
+        else if (isTrf) { color = 'var(--accent)'; sign = '⇄ '; }
+        else if (isDebt) { color = 'var(--purple)'; sign = '• '; }
+
+        const icon = typeof getCategoryIcon === 'function' ? getCategoryIcon(t.category, t.mainType) : '📝';
+        const dispAmount = state.hideBalancesActive ? 'Rp ••••••' : `${sign}${formatRp(t.amount)}`;
+        const dateStr = t.date || (typeof formatDateIndo === 'function' ? formatDateIndo(t.timestamp) : '');
+
+        html += `
+            <div class="m3-recent-item" onclick="openEditModal(${t.id})" title="Klik untuk ubah transaksi">
+                <div class="m3-recent-icon-wrap">${icon}</div>
+                <div class="m3-recent-info">
+                    <span class="m3-recent-desc">${escapeHtml(t.desc || t.category)}</span>
+                    <span class="m3-recent-sub">${escapeHtml(t.walletName || '')} • ${dateStr}</span>
+                </div>
+                <div class="m3-recent-amount" style="color: ${color};">${dispAmount}</div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+window.updateDashboardGreeting = updateDashboardGreeting;
+window.renderDashboardRecentTransactions = renderDashboardRecentTransactions;

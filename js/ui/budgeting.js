@@ -1,15 +1,15 @@
 // --- BUDGETING FEATURE MODULE ---
 
-// Switch Active Budget Mode (Envelope, 50/30/20, Custom)
+// Switch Active Budget Mode (Envelope, Custom)
 function switchBudgetMode(mode) {
     if (!state.budgetSettings) return;
+    if (mode === '50_30_20') mode = 'envelope';
     state.budgetSettings.activeMode = mode;
     saveData();
     
     document.querySelectorAll('.budget-mode-chip').forEach(btn => btn.classList.remove('active'));
     const activeChip = document.getElementById(
-        mode === 'envelope' ? 'chip-mode-envelope' : 
-        mode === '50_30_20' ? 'chip-mode-503020' : 'chip-mode-custom'
+        mode === 'envelope' ? 'chip-mode-envelope' : 'chip-mode-custom'
     );
     if (activeChip) activeChip.classList.add('active');
     
@@ -104,12 +104,11 @@ function renderBudgetView() {
     if (!view || !state.budgetSettings) return;
 
     const settings = state.budgetSettings;
-    const mode = settings.activeMode || 'envelope';
+    const mode = (settings.activeMode === '50_30_20') ? 'envelope' : (settings.activeMode || 'envelope');
 
     document.querySelectorAll('.budget-mode-chip').forEach(btn => btn.classList.remove('active'));
     const activeChip = document.getElementById(
-        mode === 'envelope' ? 'chip-mode-envelope' : 
-        mode === '50_30_20' ? 'chip-mode-503020' : 'chip-mode-custom'
+        mode === 'envelope' ? 'chip-mode-envelope' : 'chip-mode-custom'
     );
     if (activeChip) activeChip.classList.add('active');
 
@@ -267,64 +266,6 @@ function renderBudgetView() {
             });
             modeContentArea.innerHTML = catCardsHtml;
         }
-    } else if (mode === '50_30_20') {
-        const needsCats = settings.needsCategories || ["Makanan & Minuman", "Makanan", "Belanja Kebutuhan", "Belanja", "Transportasi", "Tagihan & Utilitas", "Tagihan", "Kesehatan", "Pendidikan"];
-        const wantsCats = settings.wantsCategories || ["Belanja Keinginan", "Hiburan", "Jalan-jalan", "Hobi"];
-        const savingsCats = settings.savingsCategories || ["Investasi", "Tabungan", "Dana Darurat", "Top Up Portofolio", "Top Up Investasi", "Portofolio", "Investasi / Top Up Portofolio"];
-
-        const needsSpent = monthlyExpenses.filter(t => (t.mainType === 'expense' || !t.mainType) && (needsCats.includes(t.category) || needsCats.includes(normalizeCategory(t.category)))).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-        const wantsSpent = monthlyExpenses.filter(t => (t.mainType === 'expense' || !t.mainType) && (wantsCats.includes(t.category) || wantsCats.includes(normalizeCategory(t.category)))).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-        
-        const savingsSpent = monthlyExpenses.filter(t => {
-            if (t.mainType === 'transfer' && isInvestmentWallet(t.toId)) return true;
-            const c = normalizeCategory(t.category);
-            return savingsCats.includes(t.category) || savingsCats.includes(c) || c.includes('Investasi') || c.includes('Portofolio') || c.includes('Tabungan');
-        }).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-
-        const targetNeeds = Math.round(totalBudget * 0.5);
-        const targetWants = Math.round(totalBudget * 0.3);
-        const targetSavings = Math.round(totalBudget * 0.2);
-
-        const needsPct = targetNeeds > 0 ? Math.min(100, Math.round((needsSpent / targetNeeds) * 100)) : 0;
-        const wantsPct = targetWants > 0 ? Math.min(100, Math.round((wantsSpent / targetWants) * 100)) : 0;
-        const savingsPct = targetSavings > 0 ? Math.min(100, Math.round((savingsSpent / targetSavings) * 100)) : 0;
-
-        modeContentArea.innerHTML = `
-            <h3 style="font-size: 1.05rem; margin-bottom: 12px; color: var(--text-main);">Alokasi Metode 50 / 30 / 20</h3>
-            
-            <div class="budget-category-item">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 700; font-size: 0.95rem; color: #3b82f6;">🏠 50% Needs (Kebutuhan Pokok)</span>
-                    <span style="font-size: 0.8rem; font-weight: 700;">${formatRp(needsSpent)} / ${formatRp(targetNeeds)}</span>
-                </div>
-                <div class="budget-progress-track" style="margin: 8px 0;">
-                    <div class="budget-progress-bar-fill ${needsPct > 90 ? 'danger' : 'safe'}" style="width: ${needsPct}%;"></div>
-                </div>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Mencakup: Makanan, Belanja Kebutuhan (Sembako), Transportasi, Tagihan, Kesehatan, Pendidikan.</p>
-            </div>
-
-            <div class="budget-category-item">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 700; font-size: 0.95rem; color: #f59e0b;">🎮 30% Wants (Keinginan & Lifestyle)</span>
-                    <span style="font-size: 0.8rem; font-weight: 700;">${formatRp(wantsSpent)} / ${formatRp(targetWants)}</span>
-                </div>
-                <div class="budget-progress-track" style="margin: 8px 0;">
-                    <div class="budget-progress-bar-fill ${wantsPct > 90 ? 'danger' : 'warning'}" style="width: ${wantsPct}%;"></div>
-                </div>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Mencakup: Belanja Keinginan (Fashion/Gadget), Hiburan, Jalan-jalan, Hobi.</p>
-            </div>
-
-            <div class="budget-category-item">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 700; font-size: 0.95rem; color: #10b981;">💎 20% Savings (Tabungan & Portofolio)</span>
-                    <span style="font-size: 0.8rem; font-weight: 700;">${formatRp(savingsSpent)} / ${formatRp(targetSavings)}</span>
-                </div>
-                <div class="budget-progress-track" style="margin: 8px 0;">
-                    <div class="budget-progress-bar-fill safe" style="width: ${savingsPct}%;"></div>
-                </div>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Mencakup: Tabungan, Investasi, Portofolio, Dana Darurat.</p>
-            </div>
-        `;
     } else {
         modeContentArea.innerHTML = `
             <div class="card" style="padding: 20px; text-align: center;">
@@ -369,10 +310,7 @@ function openBudgetSetupModal() {
 
     const settings = state.budgetSettings;
     const modeSelect = document.getElementById('setup-budget-mode');
-    if (modeSelect) modeSelect.value = settings.activeMode || 'envelope';
-
-    const setup503020Total = document.getElementById('setup-503020-total');
-    if (setup503020Total) setup503020Total.value = formatRp(settings.monthlyTotal || 0);
+    if (modeSelect) modeSelect.value = (settings.activeMode === '50_30_20') ? 'envelope' : (settings.activeMode || 'envelope');
 
     const setupCustomTotal = document.getElementById('setup-custom-total');
     if (setupCustomTotal) setupCustomTotal.value = formatRp(settings.monthlyTotal || 0);
@@ -409,18 +347,17 @@ function closeBudgetSetupModal() {
 function toggleBudgetSetupFields() {
     const mode = document.getElementById('setup-budget-mode')?.value || 'envelope';
     const envFields = document.getElementById('setup-envelope-fields');
-    const fields503020 = document.getElementById('setup-503020-fields');
     const customFields = document.getElementById('setup-custom-fields');
 
     if (envFields) envFields.style.display = mode === 'envelope' ? 'block' : 'none';
-    if (fields503020) fields503020.style.display = mode === '50_30_20' ? 'block' : 'none';
     if (customFields) customFields.style.display = mode === 'custom' ? 'block' : 'none';
 }
 
 function saveBudgetSettingsFromModal() {
     if (!state.budgetSettings) return;
 
-    const mode = document.getElementById('setup-budget-mode')?.value || 'envelope';
+    let mode = document.getElementById('setup-budget-mode')?.value || 'envelope';
+    if (mode === '50_30_20') mode = 'envelope';
     state.budgetSettings.activeMode = mode;
 
     if (mode === 'envelope') {
@@ -434,10 +371,6 @@ function saveBudgetSettingsFromModal() {
             }
         });
         state.budgetSettings.categoryBudgets = newCatBudgets;
-    } else if (mode === '50_30_20') {
-        const totalInput = document.getElementById('setup-503020-total');
-        const totalVal = parseInt(totalInput?.value.replace(/[^0-9]/g, '')) || 0;
-        state.budgetSettings.monthlyTotal = totalVal;
     } else if (mode === 'custom') {
         const totalInput = document.getElementById('setup-custom-total');
         const totalVal = parseInt(totalInput?.value.replace(/[^0-9]/g, '')) || 0;
@@ -582,13 +515,13 @@ function switchBudgetSection(section) {
 
     if (section === 'expenses') {
         if (btnExpenses) {
-            btnExpenses.style.background = 'var(--accent)';
-            btnExpenses.style.color = 'white';
+            btnExpenses.style.background = '';
+            btnExpenses.style.color = '';
             btnExpenses.classList.add('active');
         }
         if (btnSavings) {
-            btnSavings.style.background = 'transparent';
-            btnSavings.style.color = 'var(--text-muted)';
+            btnSavings.style.background = '';
+            btnSavings.style.color = '';
             btnSavings.classList.remove('active');
         }
         if (secExpenses) secExpenses.style.display = 'block';
@@ -602,13 +535,13 @@ function switchBudgetSection(section) {
         renderBudgetView();
     } else {
         if (btnSavings) {
-            btnSavings.style.background = 'var(--accent)';
-            btnSavings.style.color = 'white';
+            btnSavings.style.background = '';
+            btnSavings.style.color = '';
             btnSavings.classList.add('active');
         }
         if (btnExpenses) {
-            btnExpenses.style.background = 'transparent';
-            btnExpenses.style.color = 'var(--text-muted)';
+            btnExpenses.style.background = '';
+            btnExpenses.style.color = '';
             btnExpenses.classList.remove('active');
         }
         if (secExpenses) secExpenses.style.display = 'none';

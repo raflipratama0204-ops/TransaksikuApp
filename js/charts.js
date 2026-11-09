@@ -498,3 +498,265 @@ function renderReceivablesChart(persOut, bizOut) {
         });
     }
 }
+
+// ============================================================
+// DASHBOARD CASH MOVEMENT LINE CHART (GRAFIK PERGERAKAN UANG)
+// ============================================================
+let currentDashboardChartRange = 30;
+
+function setDashboardChartRange(range, btnEl) {
+    currentDashboardChartRange = range;
+    const switcher = document.getElementById('dashboard-chart-range-switcher');
+    if (switcher) {
+        switcher.querySelectorAll('.chart-range-btn').forEach(b => {
+            b.classList.toggle('active', b === btnEl);
+        });
+    }
+    renderDashboardCashMovementChart();
+}
+
+function renderDashboardCashMovementChart() {
+    const canvas = document.getElementById('cashMovementChart');
+    if (!canvas) return;
+
+    if (typeof Chart === 'undefined') return;
+
+    const ctx = canvas.getContext('2d');
+    if (state.myDashboardCashChart) {
+        try {
+            state.myDashboardCashChart.destroy();
+        } catch (e) {}
+        state.myDashboardCashChart = null;
+    }
+
+    const isDark = document.body.classList.contains('dark-theme');
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
+    let numDays = 30;
+    if (currentDashboardChartRange === 7) {
+        numDays = 7;
+    } else if (currentDashboardChartRange === 'all') {
+        let earliest = now;
+        (state.transactions || []).forEach(t => {
+            const d = new Date(t.timestamp || t.id);
+            if (!isNaN(d.getTime()) && d < earliest) earliest = d;
+        });
+        const diffTime = Math.abs(now - earliest);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        numDays = Math.max(7, Math.min(diffDays + 1, 365));
+    }
+
+    const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (numDays - 1), 0, 0, 0, 0);
+
+    // Calculate current total balance from all active wallets
+    let currentTotal = 0;
+    (state.wallets || []).forEach(w => {
+        currentTotal += Number(w.balance) || 0;
+    });
+
+    // Group transactions by day and calculate total in/out for the period
+    let totalInPeriod = 0;
+    let totalOutPeriod = 0;
+    const dailyDeltas = {}; // key: 'YYYY-MM-DD' => delta
+
+    (state.transactions || []).forEach(t => {
+        const tDate = new Date(t.timestamp || t.id);
+        if (isNaN(tDate.getTime())) return;
+
+        const y = tDate.getFullYear();
+        const m = String(tDate.getMonth() + 1).padStart(2, '0');
+        const d = String(tDate.getDate()).padStart(2, '0');
+        const dateKey = `${y}-${m}-${d}`;
+
+        const amt = Number(t.amount) || 0;
+        let delta = 0;
+
+        if (t.mainType === 'income' || t.mainType === 'receivables') {
+            delta = amt;
+            if (tDate >= startDate && tDate <= now) totalInPeriod += amt;
+        } else if (t.mainType === 'expense') {
+            delta = -amt;
+            if (tDate >= startDate && tDate <= now) totalOutPeriod += amt;
+        } else if (t.mainType === 'debt') {
+            delta = amt;
+            if (tDate >= startDate && tDate <= now) totalInPeriod += amt;
+        } else if (t.mainType === 'adjustment') {
+            if (t.category === 'Koreksi (+)' || t.category === 'Saldo Awal') {
+                delta = amt;
+                if (tDate >= startDate && tDate <= now) totalInPeriod += amt;
+            } else {
+                delta = -amt;
+                if (tDate >= startDate && tDate <= now) totalOutPeriod += amt;
+            }
+        }
+
+        dailyDeltas[dateKey] = (dailyDeltas[dateKey] || 0) + delta;
+    });
+
+    // Build day sequence from startDate to today
+    const days = [];
+    const dateLabels = [];
+    const fullDateLabels = [];
+    let iter = new Date(startDate);
+    while (iter <= now) {
+        const y = iter.getFullYear();
+        const m = String(iter.getMonth() + 1).padStart(2, '0');
+        const d = String(iter.getDate()).padStart(2, '0');
+        const dateKey = `${y}-${m}-${d}`;
+        days.push(dateKey);
+
+        const shortLabel = iter.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        dateLabels.push(shortLabel);
+
+        const fullLabel = iter.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        fullDateLabels.push(fullLabel);
+
+        iter.setDate(iter.getDate() + 1);
+    }
+
+    // Work backwards from currentTotal to reconstruct running balance at end of each day
+    const balances = new Array(days.length);
+    let running = currentTotal;
+
+    for (let i = days.length - 1; i >= 0; i--) {
+        balances[i] = running;
+        const key = days[i];
+        const dayDelta = dailyDeltas[key] || 0;
+        running = running - dayDelta;
+    }
+
+    const startBalance = (balances.length > 1) ? balances[0] : currentTotal;
+    const endBalance = currentTotal;
+    const netChange = endBalance - startBalance;
+
+    let percentChange = 0;
+    if (startBalance > 0) {
+        percentChange = ((endBalance - startBalance) / startBalance) * 100;
+    } else if (startBalance === 0) {
+        percentChange = endBalance > 0 ? 100 : (endBalance < 0 ? -100 : 0);
+    } else {
+        percentChange = ((endBalance - startBalance) / Math.abs(startBalance)) * 100;
+    }
+
+    // Update UI elements
+    const pctBadge = document.getElementById('dashboard-chart-pct-badge');
+    const nominalSub = document.getElementById('dashboard-chart-nominal-sub');
+    const totalInEl = document.getElementById('dashboard-chart-total-in');
+    const totalOutEl = document.getElementById('dashboard-chart-total-out');
+
+    let lineColor = '#228b5b';
+    let gradTop = 'rgba(34, 139, 91, 0.22)';
+
+    if (pctBadge) {
+        if (netChange > 0) {
+            pctBadge.className = 'apple-trend-pill positive';
+            pctBadge.innerText = `↗ +${Math.abs(percentChange).toFixed(1)}%`;
+            lineColor = '#228b5b';
+            gradTop = 'rgba(34, 139, 91, 0.25)';
+        } else if (netChange < 0) {
+            pctBadge.className = 'apple-trend-pill negative';
+            pctBadge.innerText = `↘ -${Math.abs(percentChange).toFixed(1)}%`;
+            lineColor = '#ba1a1a';
+            gradTop = 'rgba(186, 26, 26, 0.25)';
+        } else {
+            pctBadge.className = 'apple-trend-pill neutral';
+            pctBadge.innerText = `0.0% Stabil`;
+            lineColor = '#6750a4';
+            gradTop = 'rgba(103, 80, 164, 0.25)';
+        }
+    }
+
+    if (nominalSub) {
+        const sign = netChange > 0 ? '+' : (netChange < 0 ? '-' : '');
+        const rangeText = currentDashboardChartRange === 'all' ? 'semua waktu' : `${numDays} hari terakhir`;
+        const dispNet = state.hideBalancesActive ? 'Rp ••••••' : `${sign}${formatRp(Math.abs(netChange))}`;
+        nominalSub.innerText = `${dispNet} (${rangeText})`;
+    }
+
+    if (totalInEl) totalInEl.innerText = state.hideBalancesActive ? 'Rp ••••••' : formatRp(totalInPeriod);
+    if (totalOutEl) totalOutEl.innerText = state.hideBalancesActive ? 'Rp ••••••' : formatRp(totalOutPeriod);
+
+    // Create chart gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+    gradient.addColorStop(0, gradTop);
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    state.myDashboardCashChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dateLabels,
+            datasets: [{
+                data: balances,
+                borderColor: lineColor,
+                borderWidth: 2.5,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.35,
+                pointRadius: numDays <= 7 ? 4 : 0,
+                pointHoverRadius: 6,
+                pointBackgroundColor: isDark ? '#1d2026' : '#ffffff',
+                pointBorderColor: lineColor,
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: isDark ? '#1d2026' : '#ffffff',
+                    titleColor: isDark ? '#e2e2e6' : '#191c20',
+                    bodyColor: isDark ? '#c4c6d0' : '#44474f',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 16,
+                    displayColors: false,
+                    callbacks: {
+                        title: (items) => {
+                            const idx = items[0].dataIndex;
+                            return fullDateLabels[idx] || '';
+                        },
+                        label: (item) => {
+                            if (state.hideBalancesActive) return 'Saldo: Rp ••••••';
+                            return 'Saldo: ' + formatRp(item.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: isDark ? '#8e9099' : '#74777f',
+                        font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 10 },
+                        maxTicksLimit: numDays <= 7 ? 7 : (numDays <= 30 ? 6 : 8)
+                    }
+                },
+                y: {
+                    grid: {
+                        color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: isDark ? '#8e9099' : '#74777f',
+                        font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 10 },
+                        maxTicksLimit: 4,
+                        callback: (val) => {
+                            if (state.hideBalancesActive) return '•••';
+                            if (Math.abs(val) >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+                            if (Math.abs(val) >= 1000) return (val / 1000).toFixed(0) + 'k';
+                            return val;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}

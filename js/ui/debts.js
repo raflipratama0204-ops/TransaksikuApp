@@ -1,6 +1,62 @@
 // --- DEBT (HUTANG) & RECEIVABLE (PIUTANG) UI MODULE ---
 let currentSelectedDebtId = null;
 let currentSelectedReceivableId = null;
+let currentDebtRecTab = 'debt';
+
+// TAB SWITCHER: HUTANG VS PIUTANG
+function switchDebtRecTab(tab) {
+    currentDebtRecTab = tab;
+    const btnDebt = document.getElementById('btn-tab-debt');
+    const btnRec = document.getElementById('btn-tab-receivable');
+    const secDebt = document.getElementById('debt-rec-section-debt');
+    const secRec = document.getElementById('debt-rec-section-receivable');
+    const mainTitle = document.getElementById('debt-rec-main-title');
+    const mainDesc = document.getElementById('debt-rec-main-desc');
+    const btnAddDebt = document.getElementById('btn-add-debt');
+    const btnAddRec = document.getElementById('btn-add-receivable');
+
+    if (tab === 'debt') {
+        if (btnDebt) {
+            btnDebt.style.background = '';
+            btnDebt.style.color = '';
+            btnDebt.classList.add('active');
+        }
+        if (btnRec) {
+            btnRec.style.background = '';
+            btnRec.style.color = '';
+            btnRec.classList.remove('active');
+        }
+        if (secDebt) secDebt.style.display = 'block';
+        if (secRec) secRec.style.display = 'none';
+
+        if (mainTitle) mainTitle.textContent = 'Manajemen & Pelunasan Hutang';
+        if (mainDesc) mainDesc.textContent = 'Kelola kewajiban hutang, cicilan bulanan, dan jadwal jatuh tempo secara teratur.';
+        if (btnAddDebt) btnAddDebt.style.display = 'inline-block';
+        if (btnAddRec) btnAddRec.style.display = 'none';
+
+        renderDebtView();
+    } else {
+        if (btnRec) {
+            btnRec.style.background = '';
+            btnRec.style.color = '';
+            btnRec.classList.add('active');
+        }
+        if (btnDebt) {
+            btnDebt.style.background = '';
+            btnDebt.style.color = '';
+            btnDebt.classList.remove('active');
+        }
+        if (secDebt) secDebt.style.display = 'none';
+        if (secRec) secRec.style.display = 'block';
+
+        if (mainTitle) mainTitle.textContent = 'Manajemen & Pelunasan Piutang';
+        if (mainDesc) mainDesc.textContent = 'Pantau uang Anda yang dipinjam orang lain dan riwayat pelunasannya.';
+        if (btnAddDebt) btnAddDebt.style.display = 'none';
+        if (btnAddRec) btnAddRec.style.display = 'inline-block';
+
+        renderReceivablesView();
+    }
+}
 
 // RENDER DEBT VIEW
 function renderDebtView() {
@@ -703,3 +759,5 @@ window.openReceivableDetailModal = openReceivableDetailModal;
 window.closeReceivableDetailModal = closeReceivableDetailModal;
 window.handleEditReceivableClick = handleEditReceivableClick;
 window.handleDeleteReceivableClick = handleDeleteReceivableClick;
+window.switchDebtRecTab = switchDebtRecTab;
+window.getCurrentDebtRecTab = () => currentDebtRecTab;
